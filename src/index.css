@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 #root {
-  background-image: url(/public/bg.avif);
+  background-image: url(/bg.avif);
   background-size: cover;
   background-position: center;
   height: 100vh;
