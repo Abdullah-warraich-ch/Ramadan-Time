@@ -1,0 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
+@import "tailwindcss";
+
+#root {
+  background-image: url(/public/bg.avif);
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  font-family: "Lato", sans-serif;
+}
