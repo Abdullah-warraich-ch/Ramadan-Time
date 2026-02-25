@@ -224,25 +224,39 @@ function RamadanCalendar({ data, loading }) {
           {data.fasting.map((day, idx) => {
             const isToday = day.date === new Date().toISOString().split('T')[0];
             return (
-              <div key={idx} className={`flex items-center justify-between p-5 rounded-3xl glass-card border-white/5 ${isToday ? 'bg-white text-slate-950' : ''}`}>
+              <div
+                key={idx}
+                className={`flex items-center justify-between p-5 rounded-3xl glass-card transition-all duration-500 relative overflow-hidden ${isToday
+                    ? 'border-white/30 bg-white/10 shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)] scale-[1.01]'
+                    : 'border-white/5 opacity-60 hover:opacity-100'
+                  }`}
+              >
+                {isToday && (
+                  <div className="absolute top-0 left-0 w-1 h-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
+                )}
+
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center ${isToday ? 'bg-slate-950 text-white' : 'bg-white/5 text-white/40'}`}>
+                  <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition-colors ${isToday ? 'bg-white text-slate-950' : 'bg-white/5 text-white/40'}`}>
                     <span className="text-[10px] uppercase font-bold">{day.day.substring(0, 3)}</span>
                     <span className="text-lg font-black leading-none">{idx + 1}</span>
                   </div>
                   <div>
-                    <p className={`text-sm font-black tracking-wide ${isToday ? 'text-slate-950' : 'text-white'}`}>{day.hijri_readable.split(' AH')[0]}</p>
-                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isToday ? 'text-slate-900/60' : 'text-white/20'}`}>{day.date}</p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-black tracking-wide text-white`}>{day.hijri_readable.split(' AH')[0]}</p>
+                      {isToday && <span className="text-[8px] bg-white text-slate-950 px-1.5 py-0.5 rounded font-black tracking-tighter uppercase">Today</span>}
+                    </div>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest text-white/20`}>{day.date}</p>
                   </div>
                 </div>
+
                 <div className="flex gap-6 md:gap-16">
                   <div className="text-center">
-                    <p className={`text-[9px] font-black uppercase tracking-tighter mb-1 opacity-40`}>Sahur</p>
-                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-slate-950' : 'text-white'}`}>{day.time.sahur}</p>
+                    <p className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-20">Sahur</p>
+                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{day.time.sahur}</p>
                   </div>
                   <div className="text-center">
-                    <p className={`text-[9px] font-black uppercase tracking-tighter mb-1 opacity-40`}>Iftar</p>
-                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-slate-950' : 'text-white'}`}>{day.time.iftar}</p>
+                    <p className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-20">Iftar</p>
+                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{day.time.iftar}</p>
                   </div>
                 </div>
               </div>
