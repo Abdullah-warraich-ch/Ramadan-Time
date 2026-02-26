@@ -1,8 +1,55 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Copy, Check, Navigation } from "lucide-react";
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Copy, Check, Navigation, MapPin } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
+
+const CACHE_KEY = "ramadan_schedule_cache_v1";
+
+function formatLastUpdated(timestamp) {
+  if (!timestamp) return "Unavailable";
+  return new Date(timestamp).toLocaleString([], {
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function readScheduleCache() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.data || !parsed?.timestamp) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeScheduleCache(data, timestamp) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp }));
+  } catch {
+    // Ignore cache write failures (quota/private mode).
+  }
+}
+
+async function resolveCityName(lat, lon) {
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+    );
+    const json = await response.json();
+    return json.city || json.locality || json.principalSubdivision || "Your Location";
+  } catch {
+    return "Your Location";
+  }
+}
 
 // --- Components ---
 
@@ -37,7 +84,7 @@ function TimingTile({ icon, label, time, active }) {
 
 // --- Page: Home (Main Tracker) ---
 
-function Home({ data, loading, onRetry, errorMessage }) {
+function Home({ data, loading, onRetry, errorMessage, lastUpdated, isCachedData, cityName }) {
   const [timeLeft, setTimeLeft] = useState({ h: "00", m: "00", s: "00" });
   const [currentStatus, setCurrentStatus] = useState("");
   const [todayData, setTodayData] = useState(null);
@@ -168,6 +215,10 @@ function Home({ data, loading, onRetry, errorMessage }) {
           </h1>
           <div className="flex items-center gap-2 mt-1 text-[8px] md:text-[10px] text-white/40 font-bold tracking-widest uppercase">
             <span>{todayData.hijri_readable}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-2 py-0.5">
+              <MapPin size={10} />
+              {cityName || "Your Location"}
+            </span>
           </div>
         </div>
         <Link to="/ramadan" className="bg-white/5 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 text-[10px] font-bold tracking-wider text-white hover:bg-white/10 transition-all">
@@ -228,6 +279,9 @@ function Home({ data, loading, onRetry, errorMessage }) {
       </div>
 
       <footer className="w-full text-center px-4 pb-4">
+        <p className="text-[10px] md:text-xs font-bold tracking-wide text-white/45 mb-2">
+          Last updated: {formatLastUpdated(lastUpdated)} {isCachedData ? "(offline cache)" : ""}
+        </p>
         <p className="text-white/20 italic text-[10px] md:text-xs font-light leading-snug max-w-sm mx-auto">
           "{data?.resource?.hadith?.english ?? "May your fast be accepted."}"
         </p>
@@ -238,7 +292,7 @@ function Home({ data, loading, onRetry, errorMessage }) {
 
 // --- Page: Ramadan Calendar ---
 
-function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
+function RamadanCalendar({ data, loading, onRetry, errorMessage, lastUpdated, isCachedData, cityName }) {
   const navigate = useNavigate();
   const todayRowRef = useRef(null);
 
@@ -276,7 +330,16 @@ function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
         <button aria-label="Go home" onClick={() => navigate("/")} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all">
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-xl font-black tracking-widest uppercase">Monthly Schedule</h2>
+        <div className="text-center">
+          <h2 className="text-xl font-black tracking-widest uppercase">Monthly Schedule</h2>
+          <p className="text-[9px] font-bold tracking-wide text-white/45">
+            {formatLastUpdated(lastUpdated)} {isCachedData ? "• Cached" : ""}
+          </p>
+          <p className="text-[9px] font-bold tracking-wide text-white/45 inline-flex items-center gap-1">
+            <MapPin size={10} />
+            {cityName || "Your Location"}
+          </p>
+        </div>
         <button
           type="button"
           aria-label="Jump to today"
@@ -344,6 +407,9 @@ function AppContent() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isCachedData, setIsCachedData] = useState(false);
+  const [cityName, setCityName] = useState("Your Location");
   const location = useLocation();
   const requestIdRef = useRef(0);
 
@@ -362,19 +428,47 @@ function AppContent() {
           { timeout: 5000 }
         );
       });
+      resolveCityName(coords.lat, coords.lon).then((city) => {
+        if (requestId === requestIdRef.current) setCityName(city);
+      });
       const response = await fetch(`https://islamicapi.com/api/v1/ramadan/?lat=${coords.lat}&lon=${coords.lon}&api_key=xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3`);
       const json = await response.json();
       if (requestId !== requestIdRef.current) return;
       if (json.status === "success") {
-        setData({ ramadan_year: json.ramadan_year, fasting: json.data?.fasting ?? [], resource: json.resource ?? null });
+        const nextData = { ramadan_year: json.ramadan_year, fasting: json.data?.fasting ?? [], resource: json.resource ?? null };
+        const timestamp = Date.now();
+        setData(nextData);
+        setLastUpdated(timestamp);
+        setIsCachedData(false);
+        writeScheduleCache(nextData, timestamp);
       } else {
-        setData(null);
-        setError("Unable to fetch Ramadan schedule.");
+        const cached = readScheduleCache();
+        if (cached) {
+          setData(cached.data);
+          setLastUpdated(cached.timestamp);
+          setIsCachedData(true);
+          setError("Showing last saved schedule (API unavailable).");
+        } else {
+          setData(null);
+          setLastUpdated(null);
+          setIsCachedData(false);
+          setError("Unable to fetch Ramadan schedule.");
+        }
       }
     } catch (err) {
       if (requestId !== requestIdRef.current) return;
-      setData(null);
-      setError("Network error while loading schedule.");
+      const cached = readScheduleCache();
+      if (cached) {
+        setData(cached.data);
+        setLastUpdated(cached.timestamp);
+        setIsCachedData(true);
+        setError("Offline mode: showing last saved schedule.");
+      } else {
+        setData(null);
+        setLastUpdated(null);
+        setIsCachedData(false);
+        setError("Network error while loading schedule.");
+      }
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
     }
@@ -404,8 +498,34 @@ function AppContent() {
       </div>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Home data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} />} />
-          <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                data={data}
+                loading={loading}
+                onRetry={fetchRamadanData}
+                errorMessage={error}
+                lastUpdated={lastUpdated}
+                isCachedData={isCachedData}
+                cityName={cityName}
+              />
+            }
+          />
+          <Route
+            path="/ramadan"
+            element={
+              <RamadanCalendar
+                data={data}
+                loading={loading}
+                onRetry={fetchRamadanData}
+                errorMessage={error}
+                lastUpdated={lastUpdated}
+                isCachedData={isCachedData}
+                cityName={cityName}
+              />
+            }
+          />
         </Routes>
       </AnimatePresence>
       {error && (
