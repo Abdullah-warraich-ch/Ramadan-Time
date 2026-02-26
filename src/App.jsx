@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays } from "lucide-react";
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Copy, Check, Navigation } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 
 // --- Components ---
@@ -41,6 +41,8 @@ function Home({ data, loading, onRetry, errorMessage }) {
   const [timeLeft, setTimeLeft] = useState({ h: "00", m: "00", s: "00" });
   const [currentStatus, setCurrentStatus] = useState("");
   const [todayData, setTodayData] = useState(null);
+  const [timeProgress, setTimeProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!data) return;
@@ -61,19 +63,25 @@ function Home({ data, loading, onRetry, errorMessage }) {
       const iftarTime = parseTime(currentDay.time.iftar, currentDay.date);
 
       let targetTime;
+      let previousTime;
       let status = "";
 
       if (now < sahurTime) {
         targetTime = sahurTime;
+        const previousDate = new Date(currentDay.date);
+        previousDate.setDate(previousDate.getDate() - 1);
+        previousTime = parseTime(currentDay.time.iftar, previousDate.toISOString().split("T")[0]);
         status = "sahur";
       } else if (now < iftarTime) {
         targetTime = iftarTime;
+        previousTime = sahurTime;
         status = "iftar";
       } else {
         const tomorrowIndex = currentIndex + 1;
         if (tomorrowIndex < data.fasting.length) {
           const tomorrowDay = data.fasting[tomorrowIndex];
           targetTime = parseTime(tomorrowDay.time.sahur, tomorrowDay.date);
+          previousTime = iftarTime;
           status = "sahur";
         }
       }
@@ -94,6 +102,15 @@ function Home({ data, loading, onRetry, errorMessage }) {
           m: m.toString().padStart(2, "0"),
           s: s.toString().padStart(2, "0")
         });
+
+        if (previousTime && targetTime.getTime() > previousTime.getTime()) {
+          const elapsed = now.getTime() - previousTime.getTime();
+          const totalWindow = targetTime.getTime() - previousTime.getTime();
+          const percent = Math.min(100, Math.max(0, (elapsed / totalWindow) * 100));
+          setTimeProgress(percent);
+        } else {
+          setTimeProgress(0);
+        }
       }
     };
 
@@ -128,6 +145,17 @@ function Home({ data, loading, onRetry, errorMessage }) {
     );
   }
 
+  const handleCopyTimings = async () => {
+    const text = `Ramadan ${data.ramadan_year} - ${todayData.date}\nSahur: ${formatTo12Hour(todayData.time.sahur)}\nIftar: ${formatTo12Hour(todayData.time.iftar)}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -155,6 +183,20 @@ function Home({ data, loading, onRetry, errorMessage }) {
           initial={{ scale: 0.95 }} animate={{ scale: 1 }}
           className="w-full glass-card rounded-[3rem] p-6 md:p-12 flex flex-col items-center border-white/5 shadow-2xl"
         >
+          <div className="w-full mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] uppercase tracking-[0.35em] text-white/35">Progress</span>
+              <span className="text-[10px] font-bold text-white/60">{Math.round(timeProgress)}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-sky-300 to-emerald-300"
+                animate={{ width: `${timeProgress}%` }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+
           <div className="flex items-center gap-3 mb-6">
             <span className="text-xs md:text-sm font-medium tracking-[0.5em] uppercase text-white/40">
               {currentStatus === "iftar" ? "Until Iftar" : "Until Sahur"}
@@ -173,6 +215,15 @@ function Home({ data, loading, onRetry, errorMessage }) {
             <TimingTile icon={<Clock size={20} />} label="SAHUR" time={formatTo12Hour(todayData.time.sahur)} active={currentStatus === "sahur"} />
             <TimingTile icon={<Sun size={20} />} label="IFTAR" time={formatTo12Hour(todayData.time.iftar)} active={currentStatus === "iftar"} />
           </div>
+
+          <button
+            type="button"
+            onClick={handleCopyTimings}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white/90 hover:bg-white/10 transition-all"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Copied" : "Copy Today Timings"}
+          </button>
         </motion.div>
       </div>
 
@@ -189,6 +240,7 @@ function Home({ data, loading, onRetry, errorMessage }) {
 
 function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
   const navigate = useNavigate();
+  const todayRowRef = useRef(null);
 
   if (loading) return null;
   if (!data) {
@@ -225,7 +277,15 @@ function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
           <ChevronLeft size={20} />
         </button>
         <h2 className="text-xl font-black tracking-widest uppercase">Monthly Schedule</h2>
-        <div className="w-12"></div>
+        <button
+          type="button"
+          aria-label="Jump to today"
+          onClick={() => todayRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          className="inline-flex items-center gap-1 rounded-xl border border-white/15 bg-white/5 px-2.5 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-white/10"
+        >
+          <Navigation size={12} />
+          Today
+        </button>
       </div>
 
       <div className="flex-1 w-full overflow-y-auto pr-2 custom-scrollbar">
@@ -235,6 +295,7 @@ function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
             return (
               <div
                 key={idx}
+                ref={isToday ? todayRowRef : null}
                 className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-5 rounded-3xl glass-card transition-all duration-500 relative overflow-hidden ${isToday
                     ? 'border-white/30 bg-white/10 shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)] scale-[1.01]'
                     : 'border-white/5 opacity-60 hover:opacity-100'
