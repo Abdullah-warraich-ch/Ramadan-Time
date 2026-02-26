@@ -1,35 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Moon,
-  Sun,
-  MapPin,
-  Calendar,
-  Timer,
-  ChevronRight,
-  Clock,
-  LayoutDashboard,
-  ExternalLink,
-  ChevronLeft
-} from "lucide-react";
-
-// --- Utility Functions ---
-
-function parseTime(timeStr, dateStr) {
-  if (!timeStr) return null;
-  const parts = timeStr.trim().split(/\s+/);
-  const time = parts[0];
-  const modifier = parts[1];
-  let [hours, minutes] = time.split(":").map(Number);
-
-  if (modifier === "PM" && hours < 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-
-  const d = new Date(dateStr);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays } from "lucide-react";
+import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 
 // --- Components ---
 
@@ -52,19 +25,19 @@ function CountdownSeparator() {
 
 function TimingTile({ icon, label, time, active }) {
   return (
-    <div className={`p-4 md:p-6 rounded-3xl border flex flex-col items-center justify-center text-center transition-all duration-500 ${active ? 'bg-white/10 border-white/20 scale-105 shadow-2xl' : 'bg-white/5 border-transparent opacity-40'}`}>
+    <div className={`p-4 md:p-6 rounded-3xl border flex flex-col items-center justify-center text-center transition-all duration-500 ${active ? 'bg-white/15 border-white/30 scale-105 shadow-2xl' : 'bg-white/5 border-transparent opacity-60 hover:opacity-100'}`}>
       <div className={`p-2 rounded-xl mb-2 ${active ? 'bg-white text-slate-950' : 'bg-white/5 text-white/40'}`}>
         {icon}
       </div>
       <p className={`text-[8px] md:text-[10px] font-black tracking-widest uppercase mb-1 ${active ? 'text-white/60' : 'text-white/20'}`}>{label}</p>
-      <p className={`text-xl md:text-3xl font-black ${active ? 'text-white' : 'text-white/40'}`}>{time}</p>
+      <p className={`text-xl md:text-3xl font-black tracking-tight ${active ? 'text-white' : 'text-white/50'}`}>{time}</p>
     </div>
   );
 }
 
 // --- Page: Home (Main Tracker) ---
 
-function Home({ data, loading }) {
+function Home({ data, loading, onRetry, errorMessage }) {
   const [timeLeft, setTimeLeft] = useState({ h: "00", m: "00", s: "00" });
   const [currentStatus, setCurrentStatus] = useState("");
   const [todayData, setTodayData] = useState(null);
@@ -74,7 +47,7 @@ function Home({ data, loading }) {
 
     const updateCountdown = () => {
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
+      const todayStr = getTodayString();
 
       let currentIndex = data.fasting.findIndex(f => f.date === todayStr);
       if (currentIndex === -1) {
@@ -134,11 +107,22 @@ function Home({ data, loading }) {
   if (!data || !todayData) {
     return (
       <div className="relative z-10 w-full h-full max-w-3xl px-6 py-8 flex items-center justify-center">
-        <div className="glass-card rounded-3xl border-white/10 px-6 py-8 text-center">
-          <p className="text-sm md:text-base font-semibold text-white">Unable to load Ramadan timings.</p>
-          <p className="text-xs md:text-sm text-slate-400 mt-2">
-            Please check your internet connection and try again.
+        <div className="glass-card w-full max-w-xl rounded-3xl border border-white/15 px-8 py-10 text-center shadow-2xl backdrop-blur-xl bg-gradient-to-b from-white/10 to-white/5">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white">
+            <AlertCircle size={22} />
+          </div>
+          <p className="text-base md:text-lg font-black tracking-wide text-white">Unable to load Ramadan timings</p>
+          <p className="text-xs md:text-sm text-slate-300/90 mt-3 max-w-md mx-auto">
+            {errorMessage || "Please check your internet connection and try again."}
           </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-white/20"
+          >
+            <RefreshCw size={14} />
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -159,7 +143,10 @@ function Home({ data, loading }) {
           </div>
         </div>
         <Link to="/ramadan" className="bg-white/5 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/10 text-[10px] font-bold tracking-wider text-white hover:bg-white/10 transition-all">
-          CALENDAR
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarDays size={13} />
+            CALENDAR
+          </span>
         </Link>
       </div>
 
@@ -183,8 +170,8 @@ function Home({ data, loading }) {
           </div>
 
           <div className="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-2xl">
-            <TimingTile icon={<Clock size={20} />} label="SAHUR" time={todayData.time.sahur} active={currentStatus === "sahur"} />
-            <TimingTile icon={<Sun size={20} />} label="IFTAR" time={todayData.time.iftar} active={currentStatus === "iftar"} />
+            <TimingTile icon={<Clock size={20} />} label="SAHUR" time={formatTo12Hour(todayData.time.sahur)} active={currentStatus === "sahur"} />
+            <TimingTile icon={<Sun size={20} />} label="IFTAR" time={formatTo12Hour(todayData.time.iftar)} active={currentStatus === "iftar"} />
           </div>
         </motion.div>
       </div>
@@ -200,19 +187,41 @@ function Home({ data, loading }) {
 
 // --- Page: Ramadan Calendar ---
 
-function RamadanCalendar({ data, loading }) {
+function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
   const navigate = useNavigate();
 
   if (loading) return null;
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="relative z-10 w-full h-full max-w-3xl px-6 py-8 flex items-center justify-center">
+        <div className="glass-card w-full max-w-xl rounded-3xl border border-white/15 px-8 py-10 text-center shadow-2xl backdrop-blur-xl bg-gradient-to-b from-white/10 to-white/5">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white">
+            <AlertCircle size={22} />
+          </div>
+          <p className="text-base md:text-lg font-black tracking-wide text-white">Calendar is unavailable</p>
+          <p className="text-xs md:text-sm text-slate-300/90 mt-3 max-w-md mx-auto">
+            {errorMessage || "Please try fetching timings again."}
+          </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-white/20"
+          >
+            <RefreshCw size={14} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
       className="relative z-10 w-full h-full max-w-5xl px-6 py-6 flex flex-col items-center"
     >
-      <div className="w-full flex justify-between items-center mb-8">
-        <button onClick={() => navigate("/")} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all">
+      <div className="w-full flex justify-between items-center mb-8 sticky top-0 z-10 py-2 backdrop-blur-md bg-black/25">
+        <button aria-label="Go home" onClick={() => navigate("/")} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all">
           <ChevronLeft size={20} />
         </button>
         <h2 className="text-xl font-black tracking-widest uppercase">Monthly Schedule</h2>
@@ -222,11 +231,11 @@ function RamadanCalendar({ data, loading }) {
       <div className="flex-1 w-full overflow-y-auto pr-2 custom-scrollbar">
         <div className="grid grid-cols-1 gap-3">
           {data.fasting.map((day, idx) => {
-            const isToday = day.date === new Date().toISOString().split('T')[0];
+            const isToday = day.date === getTodayString();
             return (
               <div
                 key={idx}
-                className={`flex items-center justify-between p-5 rounded-3xl glass-card transition-all duration-500 relative overflow-hidden ${isToday
+                className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-5 rounded-3xl glass-card transition-all duration-500 relative overflow-hidden ${isToday
                     ? 'border-white/30 bg-white/10 shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)] scale-[1.01]'
                     : 'border-white/5 opacity-60 hover:opacity-100'
                   }`}
@@ -249,14 +258,14 @@ function RamadanCalendar({ data, loading }) {
                   </div>
                 </div>
 
-                <div className="flex gap-6 md:gap-16">
+                <div className="flex justify-end gap-8 md:gap-16">
                   <div className="text-center">
                     <p className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-20">Sahur</p>
-                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{day.time.sahur}</p>
+                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{formatTo12Hour(day.time.sahur)}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-20">Iftar</p>
-                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{day.time.iftar}</p>
+                    <p className={`text-md md:text-xl font-black ${isToday ? 'text-white' : 'text-white/40'}`}>{formatTo12Hour(day.time.iftar)}</p>
                   </div>
                 </div>
               </div>
@@ -277,37 +286,40 @@ function AppContent() {
   const location = useLocation();
   const requestIdRef = useRef(0);
 
-  useEffect(() => {
+  const fetchRamadanData = async () => {
     const requestId = ++requestIdRef.current;
-    async function fetchRamadanData() {
-      try {
-        setLoading(true);
-        setError("");
-        let lat = 24.8607;
-        let lon = 67.0011;
-        const coords = await new Promise((resolve) => {
-          if (!navigator.geolocation) { resolve({ lat, lon }); return; }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-            () => resolve({ lat, lon }),
-            { timeout: 5000 }
-          );
-        });
-        const response = await fetch(`https://islamicapi.com/api/v1/ramadan/?lat=${coords.lat}&lon=${coords.lon}&api_key=xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3`);
-        const json = await response.json();
-        if (requestId !== requestIdRef.current) return;
-        if (json.status === "success") {
-          setData({ ramadan_year: json.ramadan_year, fasting: json.data?.fasting ?? [], resource: json.resource ?? null });
-        } else {
-          setError("Unable to fetch Ramadan schedule.");
-        }
-      } catch (err) {
-        if (requestId !== requestIdRef.current) return;
-        setError("Network error while loading schedule.");
-      } finally {
-        if (requestId === requestIdRef.current) setLoading(false);
+    try {
+      setLoading(true);
+      setError("");
+      let lat = 24.8607;
+      let lon = 67.0011;
+      const coords = await new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve({ lat, lon }); return; }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+          () => resolve({ lat, lon }),
+          { timeout: 5000 }
+        );
+      });
+      const response = await fetch(`https://islamicapi.com/api/v1/ramadan/?lat=${coords.lat}&lon=${coords.lon}&api_key=xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3`);
+      const json = await response.json();
+      if (requestId !== requestIdRef.current) return;
+      if (json.status === "success") {
+        setData({ ramadan_year: json.ramadan_year, fasting: json.data?.fasting ?? [], resource: json.resource ?? null });
+      } else {
+        setData(null);
+        setError("Unable to fetch Ramadan schedule.");
       }
+    } catch (err) {
+      if (requestId !== requestIdRef.current) return;
+      setData(null);
+      setError("Network error while loading schedule.");
+    } finally {
+      if (requestId === requestIdRef.current) setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchRamadanData();
   }, []);
 
@@ -316,7 +328,8 @@ function AppContent() {
       <div className="h-screen w-screen flex items-center justify-center bg-[#020617] text-white">
         <div className="flex flex-col items-center gap-4">
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="h-12 w-12 rounded-full border-2 border-white/5 border-t-white" />
-          <p className="text-[10px] tracking-[0.4em] uppercase opacity-40">Loading</p>
+          <p className="text-[10px] tracking-[0.4em] uppercase opacity-40">Loading Schedule</p>
+          <p className="text-[10px] text-white/30">Getting timings for your location...</p>
         </div>
       </div>
     );
@@ -330,11 +343,23 @@ function AppContent() {
       </div>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Home data={data} loading={loading} />} />
-          <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} />} />
+          <Route path="/" element={<Home data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} />} />
+          <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} />} />
         </Routes>
       </AnimatePresence>
-      {error && !data && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-white text-black text-[10px] font-bold tracking-widest">{error}</div>}
+      {error && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-3 py-2 rounded-xl border border-white/20 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold tracking-wide flex items-center gap-2">
+          <AlertCircle size={12} />
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={fetchRamadanData}
+            className="ml-1 rounded-lg border border-white/15 px-2 py-1 text-[9px] uppercase tracking-wider hover:bg-white/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
     </main>
   );
 }
