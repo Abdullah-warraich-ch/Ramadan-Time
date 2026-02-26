@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ramadan-time-two.vercel.app/sitemap.xml
