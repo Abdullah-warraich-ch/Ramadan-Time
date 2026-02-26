@@ -17,7 +17,7 @@ body {
   font-family: "Plus Jakarta Sans", "Outfit", sans-serif;
   background-color: var(--bg-dark);
   color: white;
-  overflow-x: hidden;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

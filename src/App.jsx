@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart } from "lucide-react";
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 import { allahNames } from "./data/names";
 
@@ -63,6 +63,11 @@ async function resolveCityName(lat, lon) {
 
 // --- Components ---
 
+const safeClone = (element, props) => {
+  if (!React.isValidElement(element)) return null;
+  return React.cloneElement(element, props);
+};
+
 function ToolkitItem({ icon, label, onClick, color, progress }) {
   const accentColors = {
     emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
@@ -90,10 +95,10 @@ function ToolkitItem({ icon, label, onClick, color, progress }) {
       className={`group relative p-5 rounded-[2rem] bg-white/5 border border-white/5 hover:border-white/10 transition-all flex flex-col items-center justify-center text-center overflow-hidden h-32`}
     >
       <div className={`p-3 rounded-2xl mb-2 transition-transform group-hover:scale-110 duration-500 ${accentColors[color]}`}>
-        {React.cloneElement(icon, { size: 18 })}
+        {safeClone(icon, { size: 18 })}
       </div>
-      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 group-hover:text-white/80 transition-colors">{label}</p>
-      {progress !== undefined && (
+      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 group-hover:text-white/80 transition-colors uppercase">{label}</p>
+      {progress !== undefined && !isNaN(progress) && (
         <div className="w-10 h-1 rounded-full bg-white/5 mt-3 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
@@ -200,7 +205,7 @@ function TimingTile({ icon, label, time, active }) {
         <div className="absolute inset-0 bg-gradient-to-br from-sky-400/5 to-transparent pointer-none" />
       )}
       <div className={`w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center rounded-lg sm:rounded-xl md:rounded-2xl mb-1 sm:mb-3 md:mb-4 transition-transform group-hover:scale-110 duration-500 ${active ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-white/5 text-white/30'}`}>
-        {React.cloneElement(icon, { size: 14 })}
+        {safeClone(icon, { size: 14 })}
       </div>
       <p className={`text-[6px] sm:text-[8px] md:text-[9px] lg:text-[11px] font-black tracking-[.1em] sm:tracking-[.2em] uppercase mb-0.5 sm:mb-1 ${active ? 'text-sky-300/80' : 'text-white/20'}`}>{label}</p>
       <p className={`text-sm sm:text-lg md:text-2xl lg:text-3xl font-black tracking-tight ${active ? 'text-white' : 'text-white/30'}`}>{time}</p>
@@ -210,12 +215,21 @@ function TimingTile({ icon, label, time, active }) {
 
 // --- Page: Home (Main Tracker) ---
 
-function Home({ data, loading, onRetry, errorMessage, cityName }) {
+function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setData, setUsingMockData }) {
   const [timeLeft, setTimeLeft] = useState({ h: "00", m: "00", s: "00" });
   const [currentStatus, setCurrentStatus] = useState("");
   const [todayData, setTodayData] = useState(null);
   const [timeProgress, setTimeProgress] = useState(0);
   const [shareStatus, setShareStatus] = useState("idle");
+
+  // Initial todayData sync if data is already available
+  useEffect(() => {
+    if (data?.fasting && !todayData) {
+      const todayStr = getTodayString();
+      const found = data.fasting.find(f => f.date === todayStr) || data.fasting[0];
+      if (found) setTodayData(found);
+    }
+  }, [data, todayData]);
 
   // Feature Modals State
   const [showDua, setShowDua] = useState(false);
@@ -232,6 +246,22 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
   const [charityProgress, setCharityProgress] = useState(() => Number(localStorage.getItem('charity_goal')) || 0);
   const [showQuran, setShowQuran] = useState(false);
   const [showCharity, setShowCharity] = useState(false);
+
+  const dailyHadiths = [
+    { text: "The best among you are those who have the best manners and character.", source: "Sahih Bukhari" },
+    { text: "Whoever fasts Ramadan out of faith and in the hope of reward will be forgiven his previous sins.", source: "Sahih Bukhari" },
+    { text: "The Prophet (PBUH) was the most generous of people, and he was most generous during Ramadan.", source: "Sahih Bukhari" },
+    { text: "When Ramadan begins, the gates of Paradise are opened and the gates of Hell are closed.", source: "Sahih Muslim" },
+    { text: "A person's wealth is not diminished by charity.", source: "Sahih Muslim" }
+  ];
+
+  const getInspiration = () => {
+    if (!todayData) return dailyHadiths[0];
+    const idx = Math.abs(Number(todayData.day || 0)) % dailyHadiths.length;
+    return dailyHadiths[idx] || dailyHadiths[0];
+  };
+
+  const inspiration = getInspiration();
 
   useEffect(() => { localStorage.setItem('quran_juz', juzProgress.toString()); }, [juzProgress]);
   useEffect(() => { localStorage.setItem('charity_goal', charityProgress.toString()); }, [charityProgress]);
@@ -252,7 +282,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
   useEffect(() => { localStorage.setItem(`checklist_${today}`, JSON.stringify(checklist)); }, [checklist, today]);
 
   const toggleTask = (task) => setChecklist(prev => ({ ...prev, [task]: !prev[task] }));
-  const completedCount = Object.values(checklist).filter(Boolean).length;
 
   // Zakat Calculator State
   const [zakatInputs, setZakatInputs] = useState({ cash: "", gold: "", silver: "", investments: "", debts: "" });
@@ -269,8 +298,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
     { mood: "Angry", emoji: "😠", arabic: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", english: "I seek refuge in Allah from the accursed devil." }
   ];
 
-  const dailySunnah = "Smiling at your brother is an act of charity (Sadaqah).";
-
   const duas = [
     { title: "Dua for Fasting", arabic: "وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ", english: "I intend to keep the fast for tomorrow in the month of Ramadan." },
     { title: "Dua for Breaking Fast", arabic: "اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ وَعَلَيْكَ تَوَكَّلْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ", english: "O Allah! I fasted for You and I believe in You and I put my trust in You and with Your sustenance I break my fast." },
@@ -278,7 +305,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
   ];
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || !data.fasting) return;
     const updateCountdown = () => {
       const now = new Date();
       const todayStr = getTodayString();
@@ -323,7 +350,8 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
   }, [data]);
 
   const handleShareTimings = async () => {
-    const text = `Ramadan ${data.ramadan_year} - ${todayData.date}\n${cityName || "Your Location"}\nSahur: ${formatTo12Hour(todayData.time.sahur)}\nIftar: ${formatTo12Hour(todayData.time.iftar)}`;
+    if (!todayData || !todayData.time) return;
+    const text = `Ramadan ${data?.ramadan_year || ""} - ${todayData.date}\n${cityName || "Your Location"}\nSahur: ${formatTo12Hour(todayData.time.sahur)}\nIftar: ${formatTo12Hour(todayData.time.iftar)}`;
     try {
       if (navigator.share) { await navigator.share({ title: `Ramadan Timings`, text, url: window.location.href }); setShareStatus("shared"); }
       else { await navigator.clipboard.writeText(text); setShareStatus("copied"); }
@@ -331,75 +359,126 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
     } catch { setShareStatus("idle"); }
   };
 
-  if (loading || !todayData) return null;
+  if (loading || (data && !todayData)) {
+    return (
+      <div className="relative z-10 w-full h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Synchronizing Schedule...</p>
+        </div>
+      </div>
+    );
+  }
 
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 w-full h-screen max-h-screen max-w-5xl px-6 py-4 flex flex-col justify-start items-center overflow-y-auto">
-      <div className="w-full flex flex-col md:flex-row justify-between items-center gap-2 mb-8">
-        <div className="text-center md:text-left">
-          <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-none text-white">
-            RAMADAN <span className="opacity-30 font-medium">{data.ramadan_year}</span>
-          </h1>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 underline-offset-4">
-            <span className="text-[10px] md:text-xs text-slate-400 font-bold tracking-[.3em] uppercase">{todayData.hijri_readable}</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[9px] md:text-xs font-bold text-slate-300">
-              <MapPin size={10} className="text-sky-400" /> {cityName || "Your Location"}
-            </span>
+  if (!data || !todayData) {
+    return (
+      <div className="relative z-10 w-full h-screen px-6 py-8 flex items-center justify-center">
+        <div className="glass-card w-full max-w-sm rounded-[3rem] border border-white/15 p-10 text-center shadow-2xl backdrop-blur-xl bg-white/5">
+          <div className="mx-auto mb-6 inline-flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-white/5 text-rose-400">
+            <AlertCircle size={32} />
+          </div>
+          <h3 className="text-xl font-black text-white italic mb-3">CONNECTION <span className="text-rose-400">ERROR</span></h3>
+          <p className="text-xs text-slate-400 leading-relaxed mb-8">
+            {errorMessage || "We couldn't retrieve the Ramadan schedule. Please check your connection."}
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={onRetry}
+              className="w-full py-4 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[10px] hover:bg-sky-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={14} /> Retry Connection
+            </button>
+            <button
+              onClick={() => {
+                setData(mockData);
+                setUsingMockData(true);
+              }}
+              className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/10"
+            >
+              Show Offline Schedule
+            </button>
           </div>
         </div>
-        <Link to="/ramadan" className="group relative overflow-hidden bg-white/5 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/10 text-[10px] sm:text-xs font-black tracking-[.2em] text-white hover:bg-white/10 transition-all">
-          <CalendarDays size={14} className="inline mr-2 text-sky-300" /> CALENDAR
-        </Link>
       </div>
+    );
+  }
 
-      <div className="w-full flex flex-col items-center gap-4">
-        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full glass-card rounded-[3rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden">
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px]" />
-          <div className="w-full max-w-lg mb-6">
-            <div className="flex justify-between items-end mb-2">
-              <span className="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Day Progress</span>
-              <span className="text-xs font-black tabular-nums text-white/60">{Math.round(timeProgress)}%</span>
+  return (
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full max-w-5xl px-6 py-4 flex flex-col justify-start items-center">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-2 mb-8">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-none text-white">
+              RAMADAN <span className="opacity-30 font-medium">{data.ramadan_year}</span>
+            </h1>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 underline-offset-4">
+              <span className="text-[10px] md:text-xs text-slate-400 font-bold tracking-[.3em] uppercase">{todayData.hijri_readable}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[9px] md:text-xs font-bold text-slate-300">
+                <MapPin size={10} className="text-sky-400" /> {cityName || "Your Location"}
+              </span>
             </div>
-            <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
-              <motion.div className="h-full bg-gradient-to-r from-sky-400 to-emerald-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]" animate={{ width: `${timeProgress}%` }} />
-            </div>
           </div>
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-[10px] font-black tracking-[0.5em] uppercase text-sky-300/60">{currentStatus === "iftar" ? "Until Iftar" : "Until Sahur"}</span>
-          </div>
-          <div className="flex items-center justify-center gap-3 md:gap-6 mb-8">
-            <CountdownBlock value={timeLeft.h} label="Hrs" />
-            <CountdownSeparator />
-            <CountdownBlock value={timeLeft.m} label="Min" />
-            <CountdownSeparator />
-            <CountdownBlock value={timeLeft.s} label="Sec" highlight={currentStatus === "iftar"} />
-          </div>
-          <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
-            <TimingTile icon={<Clock />} label="SAHUR" time={formatTo12Hour(todayData.time.sahur)} active={currentStatus === "sahur"} />
-            <TimingTile icon={<Sun />} label="IFTAR" time={formatTo12Hour(todayData.time.iftar)} active={currentStatus === "iftar"} />
-          </div>
-        </motion.div>
+          <Link to="/ramadan" className="group relative overflow-hidden bg-white/5 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/10 text-[10px] sm:text-xs font-black tracking-[.2em] text-white hover:bg-white/10 transition-all">
+            <CalendarDays size={14} className="inline mr-2 text-sky-300" /> CALENDAR
+          </Link>
+        </div>
 
-        {/* Spiritual Hub Grid */}
-        <div className="w-full max-w-2xl px-2 mt-8 mb-24">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">Spiritual Hub</h3>
-            <span className="h-px flex-1 bg-white/5 mx-6" />
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <ToolkitItem color="amber" icon={<Info />} label="99 Names" onClick={() => setShowNames(true)} />
-            <ToolkitItem color="emerald" icon={<Plus />} label="Zakat Calc" onClick={() => setShowZakat(true)} />
-            <ToolkitItem color="indigo" icon={<BookOpen />} label="Daily Duas" onClick={() => setShowDua(true)} />
-            <ToolkitItem color="rose" icon={<AlertCircle />} label="Mood Dua" onClick={() => setShowMoods(true)} />
-            <ToolkitItem color="sky" icon={<BookOpen />} label="Quran Journey" progress={(juzProgress / 30) * 100} onClick={() => setShowQuran(true)} />
-            <ToolkitItem color="violet" icon={<Heart />} label="Charity Jar" progress={charityProgress} onClick={() => setShowCharity(true)} />
+        <div className="w-full flex flex-col items-center gap-4">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full glass-card rounded-[3rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px]" />
+            <div className="w-full max-w-lg mb-6">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Day Progress</span>
+                <span className="text-xs font-black tabular-nums text-white/60">{Math.round(timeProgress)}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
+                <motion.div className="h-full bg-gradient-to-r from-sky-400 to-emerald-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]" animate={{ width: `${timeProgress}%` }} />
+              </div>
+            </div>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-[10px] font-black tracking-[0.5em] uppercase text-sky-300/60">{currentStatus === "iftar" ? "Until Iftar" : "Until Sahur"}</span>
+            </div>
+            <div className="flex items-center justify-center gap-3 md:gap-6 mb-8">
+              <CountdownBlock value={timeLeft.h} label="Hrs" />
+              <CountdownSeparator />
+              <CountdownBlock value={timeLeft.m} label="Min" />
+              <CountdownSeparator />
+              <CountdownBlock value={timeLeft.s} label="Sec" highlight={currentStatus === "iftar"} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
+              <TimingTile icon={<Clock />} label="SAHUR" time={todayData?.time ? formatTo12Hour(todayData.time.sahur) : "--:--"} active={currentStatus === "sahur"} />
+              <TimingTile icon={<Sun />} label="IFTAR" time={todayData?.time ? formatTo12Hour(todayData.time.iftar) : "--:--"} active={currentStatus === "iftar"} />
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="w-full max-w-2xl px-2 mt-4">
+            <div className="p-6 rounded-[2.5rem] bg-gradient-to-br from-sky-500/10 to-indigo-500/5 border border-white/10 backdrop-blur-md relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Sparkles size={40} className="text-sky-300" /></div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-400 mb-3 flex items-center gap-2"><Sparkles size={12} /> Daily Inspiration</p>
+              <p className="text-sm md:text-base font-medium italic text-slate-200 leading-relaxed mb-4">"{inspiration.text}"</p>
+              <div className="flex justify-between items-center">
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">— {inspiration.source}</span>
+                <button onClick={() => { navigator.clipboard.writeText(`"${inspiration.text}" — ${inspiration.source}`); alert("Inspiration copied!"); }} className="text-[9px] font-black uppercase tracking-widest text-sky-400/60 hover:text-sky-400">Copy</button>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="w-full max-w-2xl px-2 mt-8 mb-24">
+            <div className="flex justify-between items-center mb-6"><h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">Spiritual Hub</h3><span className="h-px flex-1 bg-white/5 mx-6" /></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <ToolkitItem color="amber" icon={<Info />} label="99 Names" onClick={() => setShowNames(true)} />
+              <ToolkitItem color="emerald" icon={<Plus />} label="Zakat Calc" onClick={() => setShowZakat(true)} />
+              <ToolkitItem color="indigo" icon={<BookOpen />} label="Daily Duas" onClick={() => setShowDua(true)} />
+              <ToolkitItem color="rose" icon={<AlertCircle />} label="Mood Dua" onClick={() => setShowMoods(true)} />
+              <ToolkitItem color="sky" icon={<BookOpen />} label="Quran Journey" progress={(juzProgress / 30) * 100} onClick={() => setShowQuran(true)} />
+              <ToolkitItem color="violet" icon={<Heart />} label="Charity Jar" progress={charityProgress} onClick={() => setShowCharity(true)} />
+            </div>
           </div>
         </div>
       </div>
 
       <FloatingActionMenu onShare={handleShareTimings} shareStatus={shareStatus} count={count} setCount={setCount} showTasbih={showTasbih} setShowTasbih={setShowTasbih} showChecklist={showChecklist} setShowChecklist={setShowChecklist} />
 
-      {/* Feature Modals */}
       <AnimatePresence>
         {showTasbih && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
@@ -522,7 +601,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
         )}
       </AnimatePresence>
 
-      {/* New Features Modals */}
       <AnimatePresence>
         {showQuran && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
@@ -562,7 +640,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName }) {
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
@@ -576,10 +654,10 @@ function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
   );
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 w-full max-w-4xl mx-auto mb-24">
+    <div className="p-6 w-full max-w-4xl mx-auto pb-32">
       <div className="flex items-center gap-4 mb-8 shrink-0">
         <Link to="/" className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-colors"><ChevronLeft size={20} /></Link>
-        <div><h1 className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase italic">RAMADAN <span className="text-sky-300">SCEDULE</span></h1><p className="text-[10px] font-black tracking-widest text-white/30 truncate">MONTHLY PRAYER TIMINGS {data.ramadan_year}</p></div>
+        <div><h1 className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase italic">RAMADAN <span className="text-sky-300">SCHEDULE</span></h1><p className="text-[10px] font-black tracking-widest text-white/30 truncate">MONTHLY PRAYER TIMINGS {data.ramadan_year}</p></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.fasting.map((day, i) => (
@@ -592,7 +670,7 @@ function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
           </div>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -603,20 +681,54 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cityName, setCityName] = useState("");
+  const [usingMockData, setUsingMockData] = useState(false);
+
+  const mockData = {
+    ramadan_year: "2026 / 1447",
+    fasting: Array.from({ length: 30 }, (_, i) => ({
+      day: i + 1,
+      date: `2026-02-${(18 + i).toString().padStart(2, '0')}`,
+      date_hijri: `${i + 1} Ramadan 1447`,
+      hijri_readable: `${i + 1} Ramadan 1447`,
+      time: { sahur: "05:15 AM", iftar: "06:30 PM" }
+    }))
+  };
 
   const fetchRamadanData = async (forceCoords) => {
     setLoading(true);
     setError("");
     try {
-      let coords = readScheduleCache()?.coords || DEFAULT_COORDS;
-      if (forceCoords) coords = await getBrowserCoords();
+      let cached = readScheduleCache();
+      let coords = cached?.coords;
+
+      if (forceCoords || !coords) {
+        try {
+          const browserCoords = await getBrowserCoords();
+          coords = browserCoords;
+        } catch (e) {
+          console.warn("Geolocation failed, using default", e);
+          coords = coords || DEFAULT_COORDS;
+        }
+      }
+
       const city = await resolveCityName(coords.lat, coords.lon);
       setCityName(city);
-      const res = await fetch(`${API_URL}?lat=${coords.lat}&lon=${coords.lon}&apikey=${API_KEY}`);
+      const res = await fetch(`${API_URL}?lat=${coords.lat}&lon=${coords.lon}&api_key=${API_KEY}`);
       const json = await res.json();
-      if (json?.data) { setData(json.data); writeScheduleCache(json.data, Date.now()); }
+      if (json?.data && Array.isArray(json.data.fasting)) {
+        setData(json.data);
+        writeScheduleCache(json.data, Date.now());
+      }
+      else if (json?.fasting) {
+        setData(json);
+        writeScheduleCache(json, Date.now());
+      }
       else setError("Unexpected API response format.");
-    } catch { setError("Connection error. Using default location."); }
+    } catch {
+      setError("API Connection failed. Using offline schedule.");
+      setData(mockData);
+      setUsingMockData(true);
+    }
     finally { setLoading(false); }
   };
 
@@ -624,13 +736,19 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-black text-white selection:bg-sky-500/30 overflow-x-hidden">
-        <div className="fixed inset-0 bg-[#020617] pointer-events-none" />
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1e293b_0%,_transparent_100%)] opacity-30" />
-        <Routes>
-          <Route path="/" element={<Home data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} cityName={cityName} />} />
-          <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} />} />
-        </Routes>
+      <div className="h-screen w-full relative overflow-hidden bg-black text-white selection:bg-sky-500/30">
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: "url(/bg.avif)", opacity: "0.45" }} />
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/90 via-transparent to-[#020617]/90" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1e293b_0%,_transparent_100%)] opacity-30" />
+        </div>
+        <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
+          <Routes>
+            <Route path="/" element={<Home data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} cityName={cityName} mockData={mockData} setData={setData} setUsingMockData={setUsingMockData} />} />
+            <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );
