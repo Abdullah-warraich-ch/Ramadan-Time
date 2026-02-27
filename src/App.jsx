@@ -6,7 +6,6 @@ import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 import { allahNames } from "./data/names";
 
 const CACHE_KEY = "ramadan_schedule_cache_v1";
-const DEFAULT_COORDS = { lat: 24.8607, lon: 67.0011 };
 const API_URL = "https://islamicapi.com/api/v1/ramadan/";
 const API_KEY = "xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3";
 const BASE_SITE_URL = "https://ramadan-time-two.vercel.app";
@@ -49,6 +48,14 @@ function getBrowserCoords() {
       { timeout: 5000 }
     );
   });
+}
+
+function getLocationErrorMessage(error) {
+  if (!error) return "Location is off. Please turn on location and allow permission.";
+  if (error.code === 1) return "Location permission denied. Please allow location access in your browser.";
+  if (error.code === 2) return "Location is unavailable. Please turn on location services and try again.";
+  if (error.code === 3) return "Location request timed out. Please check GPS/location services and try again.";
+  return "Location is off. Please turn on location and allow permission.";
 }
 
 async function resolveCityName(lat, lon) {
@@ -763,8 +770,19 @@ function App() {
         try {
           coords = await getBrowserCoords();
         } catch (e) {
-          console.warn("Geolocation failed, using default", e);
-          coords = coords || DEFAULT_COORDS;
+          const locationError = getLocationErrorMessage(e);
+          setError(locationError);
+          setCityName("Location Permission Required");
+
+          if (cachedData) {
+            setData(cachedData);
+            setUsingMockData(false);
+            setCityName(cached?.city || "Location Permission Required");
+          } else {
+            setData(mockData);
+            setUsingMockData(true);
+          }
+          return;
         }
       }
 
