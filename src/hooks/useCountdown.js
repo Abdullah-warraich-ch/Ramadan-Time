@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { parseTime, getTodayString } from "../utils/time";
 
 const INITIAL_TIME = { h: "00", m: "00", s: "00" };
@@ -6,15 +6,20 @@ const INITIAL_TIME = { h: "00", m: "00", s: "00" };
 export function useCountdown(data) {
   const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
   const [currentStatus, setCurrentStatus] = useState("");
-  const [todayData, setTodayData] = useState(null);
+  const todayData = useMemo(() => {
+    if (!data?.fasting?.length) return null;
+    const todayStr = getTodayString();
+    return data.fasting.find((item) => item.date === todayStr) ?? data.fasting[0] ?? null;
+  }, [data]);
 
   useEffect(() => {
-    if (!data?.fasting?.length) {
-      setTodayData(null);
-      return;
-    }
-
     const updateCountdown = () => {
+      if (!data?.fasting?.length) {
+        setTimeLeft(INITIAL_TIME);
+        setCurrentStatus("");
+        return;
+      }
+
       const now = new Date();
       const todayStr = getTodayString();
 
@@ -47,7 +52,6 @@ export function useCountdown(data) {
         }
       }
 
-      setTodayData(currentDay);
       setCurrentStatus(status);
 
       if (targetTime) {

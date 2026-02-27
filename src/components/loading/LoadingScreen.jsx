@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Moon } from "lucide-react";
 
 function LoadingScreen() {
@@ -7,12 +7,12 @@ function LoadingScreen() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.25),transparent_45%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.2),transparent_40%)]" />
       <div className="relative z-10 flex flex-col items-center gap-5 rounded-3xl border border-white/10 bg-slate-950/60 backdrop-blur-xl px-10 py-9 shadow-2xl shadow-slate-950/80">
         <div className="relative h-20 w-20 flex items-center justify-center">
-          <motion.div
+          <Motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0 rounded-full border border-amber-400/40 border-t-amber-400"
           />
-          <motion.div
+          <Motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             className="absolute inset-2 rounded-full border border-blue-300/40 border-b-blue-300"

@@ -59,7 +59,7 @@ export function useRamadanData() {
           setData(null);
           setError("Unable to fetch Ramadan schedule.");
         }
-      } catch (err) {
+      } catch {
         if (requestId !== requestIdRef.current) return;
         setData(null);
         setError("Network error while loading schedule.");

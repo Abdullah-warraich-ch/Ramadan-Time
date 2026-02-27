@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../common/EmptyState";
@@ -26,7 +26,7 @@ function RamadanCalendar({ data, loading }) {
   const today = getTodayString();
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
@@ -47,7 +47,7 @@ function RamadanCalendar({ data, loading }) {
           ))}
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 

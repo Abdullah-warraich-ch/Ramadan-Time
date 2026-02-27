@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import EmptyState from "../common/EmptyState";
 import { useCountdown } from "../../hooks/useCountdown";
 import { formatTo12Hour } from "../../utils/time";
@@ -21,7 +21,7 @@ function Home({ data, loading }) {
   }
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -39,7 +39,7 @@ function Home({ data, loading }) {
       </div>
 
       <HomeFooter hadithText={data?.resource?.hadith?.english} />
-    </motion.div>
+    </Motion.div>
   );
 }
 

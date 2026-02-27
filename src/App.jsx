@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 import { allahNames } from "./data/names";
@@ -23,11 +23,12 @@ function readScheduleCache() {
   }
 }
 
-function writeScheduleCache(data, timestamp) {
+function writeScheduleCache({ data, coords, city, timestamp }) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp }));
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify({ data, coords, city, timestamp }));
   } catch {
+    // Ignore cache write failures (private mode/storage limits)
   }
 }
 
@@ -88,7 +89,7 @@ function ToolkitItem({ icon, label, onClick, color, progress }) {
   };
 
   return (
-    <motion.button
+    <Motion.button
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
@@ -100,18 +101,18 @@ function ToolkitItem({ icon, label, onClick, color, progress }) {
       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 group-hover:text-white/80 transition-colors uppercase">{label}</p>
       {progress !== undefined && !isNaN(progress) && (
         <div className="w-10 h-1 rounded-full bg-white/5 mt-3 overflow-hidden">
-          <motion.div
+          <Motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             className={`h-full ${progressColors[color]}`}
           />
         </div>
       )}
-    </motion.button>
+    </Motion.button>
   );
 }
 
-function FloatingActionMenu({ onShare, shareStatus, count, setCount, showTasbih, setShowTasbih, showChecklist, setShowChecklist }) {
+function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setShowChecklist }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerVariants = {
     open: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } },
@@ -133,37 +134,37 @@ function FloatingActionMenu({ onShare, shareStatus, count, setCount, showTasbih,
 
   return (
     <div className="fixed bottom-10 right-10 z-[60]">
-      <motion.div
+      <Motion.div
         animate={isOpen ? { scale: 1.5, opacity: 1 } : { scale: 0, opacity: 0 }}
         className="absolute -inset-10 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"
       />
 
-      <motion.div variants={containerVariants} initial="closed" animate={isOpen ? "open" : "closed"} className="relative">
-        <motion.button
+      <Motion.div variants={containerVariants} initial="closed" animate={isOpen ? "open" : "closed"} className="relative">
+        <Motion.button
           custom={-90} variants={itemVariants}
           onClick={() => { setShowTasbih(true); setIsOpen(false); }}
           className="absolute h-12 w-12 rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl text-white shadow-2xl flex flex-col items-center justify-center group hover:bg-sky-500/20 hover:border-sky-500/50 transition-colors"
         >
           <Clock size={16} className="group-hover:text-sky-300 transition-colors" />
           <span className="text-[5px] font-black uppercase opacity-40 mt-0.5">Tasbih</span>
-        </motion.button>
+        </Motion.button>
 
-        <motion.button
+        <Motion.button
           custom={-110} variants={itemVariants}
           onClick={() => { setShowChecklist(true); setIsOpen(false); }}
           className="absolute h-12 w-12 rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl text-white shadow-2xl flex flex-col items-center justify-center group hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors"
         >
           <Check size={16} className="group-hover:text-emerald-300 transition-colors" />
           <span className="text-[5px] font-black uppercase opacity-40 mt-0.5">Deeds</span>
-        </motion.button>
+        </Motion.button>
 
-        <motion.button
+        <Motion.button
           custom={-130} variants={itemVariants} onClick={() => { onShare(); setIsOpen(false); }}
           className="absolute h-12 w-12 rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl text-white shadow-2xl flex flex-col items-center justify-center group hover:bg-white/10 transition-colors"
         >
           {shareStatus === "idle" ? <Share2 size={16} /> : <Check size={16} className="text-emerald-400" />}
           <span className="text-[5px] font-black uppercase opacity-40 mt-0.5">Share</span>
-        </motion.button>
+        </Motion.button>
 
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -176,7 +177,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setCount, showTasbih,
             </span>
           )}
         </button>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 }
@@ -221,15 +222,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   const [todayData, setTodayData] = useState(null);
   const [timeProgress, setTimeProgress] = useState(0);
   const [shareStatus, setShareStatus] = useState("idle");
-
-  // Initial todayData sync if data is already available
-  useEffect(() => {
-    if (data?.fasting && !todayData) {
-      const todayStr = getTodayString();
-      const found = data.fasting.find(f => f.date === todayStr) || data.fasting[0];
-      if (found) setTodayData(found);
-    }
-  }, [data, todayData]);
 
   // Feature Modals State
   const [showDua, setShowDua] = useState(false);
@@ -424,7 +416,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
         </div>
 
         <div className="w-full flex flex-col items-center gap-4">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full glass-card rounded-[3rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden">
+          <Motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full glass-card rounded-[3rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden">
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px]" />
             <div className="w-full max-w-lg mb-6">
               <div className="flex justify-between items-end mb-2">
@@ -432,7 +424,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 <span className="text-xs font-black tabular-nums text-white/60">{Math.round(timeProgress)}%</span>
               </div>
               <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
-                <motion.div className="h-full bg-gradient-to-r from-sky-400 to-emerald-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]" animate={{ width: `${timeProgress}%` }} />
+                <Motion.div className="h-full bg-gradient-to-r from-sky-400 to-emerald-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]" animate={{ width: `${timeProgress}%` }} />
               </div>
             </div>
             <div className="flex items-center gap-4 mb-4">
@@ -449,9 +441,9 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
               <TimingTile icon={<Clock />} label="SAHUR" time={todayData?.time ? formatTo12Hour(todayData.time.sahur) : "--:--"} active={currentStatus === "sahur"} />
               <TimingTile icon={<Sun />} label="IFTAR" time={todayData?.time ? formatTo12Hour(todayData.time.iftar) : "--:--"} active={currentStatus === "iftar"} />
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="w-full max-w-2xl px-2 mt-4">
+          <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="w-full max-w-2xl px-2 mt-4">
             <div className="p-6 rounded-[2.5rem] bg-gradient-to-br from-sky-500/10 to-indigo-500/5 border border-white/10 backdrop-blur-md relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Sparkles size={40} className="text-sky-300" /></div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-400 mb-3 flex items-center gap-2"><Sparkles size={12} /> Daily Inspiration</p>
@@ -461,7 +453,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 <button onClick={() => { navigator.clipboard.writeText(`"${inspiration.text}" — ${inspiration.source}`); alert("Inspiration copied!"); }} className="text-[9px] font-black uppercase tracking-widest text-sky-400/60 hover:text-sky-400">Copy</button>
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
 
           <div className="w-full max-w-2xl px-2 mt-8 mb-24">
             <div className="flex justify-between items-center mb-6"><h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">Spiritual Hub</h3><span className="h-px flex-1 bg-white/5 mx-6" /></div>
@@ -477,20 +469,20 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
         </div>
       </div>
 
-      <FloatingActionMenu onShare={handleShareTimings} shareStatus={shareStatus} count={count} setCount={setCount} showTasbih={showTasbih} setShowTasbih={setShowTasbih} showChecklist={showChecklist} setShowChecklist={setShowChecklist} />
+      <FloatingActionMenu onShare={handleShareTimings} shareStatus={shareStatus} count={count} setShowTasbih={setShowTasbih} setShowChecklist={setShowChecklist} />
 
       <AnimatePresence>
         {showTasbih && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-lg" /><button onClick={() => setShowTasbih(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <div className="text-center mb-10"><p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Digital Tasbih</p><h3 className="text-xl font-black italic">COUNT YOUR <span className="text-sky-300">DHIKR</span></h3></div>
               <div className="relative mb-10 text-[10rem] font-black tabular-nums leading-none text-white drop-shadow-2xl">{count}</div>
               <div className="w-full flex flex-col gap-6">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setCount(p => p + 1)} className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl">+</motion.button>
+                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => setCount(p => p + 1)} className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl">+</Motion.button>
                 <button onClick={() => setCount(0)} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400">Reset Counter</button>
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -498,7 +490,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showChecklist && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-lg" /><button onClick={() => setShowChecklist(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <div className="text-center mb-10"><p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Progress</p><h3 className="text-2xl font-black italic">DAILY <span className="text-emerald-300">DEEDS</span></h3></div>
               <div className="w-full space-y-3">
@@ -509,7 +501,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -517,26 +509,26 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showNames && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-lg glass-card rounded-[3rem] p-10 relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-lg glass-card rounded-[3rem] p-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" /><button onClick={() => { setShowNames(false); setActiveName(null); }} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <AnimatePresence mode="wait">
                 {!activeName ? (
-                  <motion.div key="g">
+                  <Motion.div key="g">
                     <h3 className="text-center text-2xl font-black italic mb-8">99 NAMES OF <span className="text-emerald-300">ALLAH</span></h3>
                     <div className="grid grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar border-white/10">
                       {allahNames.map((n, i) => (<button key={i} onClick={() => setActiveName(n)} className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-emerald-500/10"><span className="text-3xl font-arabic mb-2 block">{n.arabic}</span><span className="text-[10px] font-black uppercase text-emerald-300/40">{n.transliteration}</span></button>))}
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 ) : (
-                  <motion.div key="d" className="text-center py-10">
+                  <Motion.div key="d" className="text-center py-10">
                     <button onClick={() => setActiveName(null)} className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase text-emerald-300/40"><ChevronLeft size={16} /> Back</button>
                     <div className="text-8xl font-arabic mb-10 text-white">{activeName.arabic}</div>
                     <div className="text-xs font-black uppercase text-emerald-400 tracking-[0.3em] mb-4">{activeName.transliteration}</div>
                     <div className="text-2xl font-black italic text-white mb-10">"{activeName.meaning}"</div>
-                  </motion.div>
+                  </Motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -544,7 +536,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showZakat && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" /><button onClick={() => setShowZakat(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <div className="text-center mb-8"><h3 className="text-xl font-black italic">ZAKAT <span className="text-amber-400">CALC</span></h3></div>
               <div className="space-y-4">
@@ -555,7 +547,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 <button onClick={calculateZakat} className="w-full py-5 rounded-2xl bg-amber-500 text-black font-black uppercase text-xs">Calculate</button>
                 <div className="p-6 rounded-[2rem] bg-white/5 text-center"><p className="text-[10px] font-black text-slate-500 uppercase mb-1">Your Zakat Due</p><p className="text-3xl font-black text-amber-400">{zakatResult.toFixed(2)}</p></div>
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -563,13 +555,13 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showDua && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="w-full max-w-md glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="w-full max-w-md glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 to-indigo-500" /><button onClick={() => setShowDua(false)} className="absolute top-6 right-6 text-white/40"><X size={20} /></button>
               <h3 className="text-xl font-black italic mb-8">DAILY <span className="text-sky-300">DUAS</span></h3>
               <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                 {duas.map((d, i) => (<div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/5"><p className="text-[10px] font-black text-sky-400/60 uppercase mb-3">{d.title}</p><p className="text-2xl text-right font-arabic leading-relaxed mb-4">{d.arabic}</p><p className="text-xs text-slate-400 italic">"{d.english}"</p></div>))}
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -577,26 +569,26 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showMoods && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" /><button onClick={() => { setShowMoods(false); setActiveMoodDua(null); }} className="absolute top-6 right-6 text-white/40"><X size={20} /></button>
               <AnimatePresence mode="wait">
                 {!activeMoodDua ? (
-                  <motion.div key="s" className="w-full flex flex-col items-center">
+                  <Motion.div key="s" className="w-full flex flex-col items-center">
                     <h3 className="text-xl font-black italic mb-8">DUA <span className="text-rose-400">FINDER</span></h3>
                     <div className="grid grid-cols-2 gap-4 w-full">
                       {moodDuas.map((m, i) => (<button key={i} onClick={() => setActiveMoodDua(m)} className="flex flex-col items-center gap-2 p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-rose-500/10"><span className="text-3xl">{m.emoji}</span><span className="text-[10px] font-black uppercase text-white/60">{m.mood}</span></button>))}
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 ) : (
-                  <motion.div key="d" className="w-full flex flex-col items-center text-center">
+                  <Motion.div key="d" className="w-full flex flex-col items-center text-center">
                     <button onClick={() => setActiveMoodDua(null)} className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-rose-400/40 self-start"><ChevronLeft size={14} /> Back</button>
                     <div className="text-4xl mb-6">{activeMoodDua.emoji}</div>
                     <p className="text-2xl font-arabic leading-relaxed text-white mb-6 uppercase">{activeMoodDua.arabic}</p>
                     <p className="text-sm text-slate-400 italic font-medium">"{activeMoodDua.english}"</p>
-                  </motion.div>
+                  </Motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -604,7 +596,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showQuran && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1.5 bg-sky-500" /><button onClick={() => setShowQuran(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <div className="text-center mb-10"><h3 className="text-2xl font-black italic">QURAN <span className="text-sky-400">JOURNEY</span></h3><p className="text-[10px] opacity-40 uppercase font-black uppercase">Track your progress through Juz</p></div>
               <div className="relative h-40 w-40 mx-auto mb-10 flex items-center justify-center border-white/5 border-rounded-full">
@@ -614,7 +606,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 <button onClick={() => setJuzProgress(p => Math.max(0, p - 1))} className="py-4 rounded-2xl bg-white/5 border border-white/5 font-black uppercase text-[10px] hover:text-white">- Decrease</button>
                 <button onClick={() => setJuzProgress(p => Math.min(30, p + 1))} className="py-4 rounded-2xl bg-sky-500 text-black font-black uppercase text-[10px]">+ Increase</button>
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -622,7 +614,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <AnimatePresence>
         {showCharity && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden">
+            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1.5 bg-violet-500" /><button onClick={() => setShowCharity(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
               <div className="text-center mb-10"><h3 className="text-2xl font-black italic">CHARITY <span className="text-violet-400">JAR</span></h3><p className="text-[10px] opacity-40 uppercase font-black uppercase">Track your Ramadan Sadaqah</p></div>
               <div className="space-y-6">
@@ -636,7 +628,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 </div>
                 <button onClick={() => setCharityProgress(0)} className="w-full py-2 text-[9px] font-black opacity-20 uppercase tracking-[0.4em]">Reset Jar</button>
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -681,30 +673,37 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cityName, setCityName] = useState("");
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [, setUsingMockData] = useState(false);
 
-  const mockData = {
-    ramadan_year: "2026 / 1447",
-    fasting: Array.from({ length: 30 }, (_, i) => ({
-      day: i + 1,
-      date: `2026-02-${(18 + i).toString().padStart(2, '0')}`,
-      date_hijri: `${i + 1} Ramadan 1447`,
-      hijri_readable: `${i + 1} Ramadan 1447`,
-      time: { sahur: "05:15 AM", iftar: "06:30 PM" }
-    }))
-  };
+  const mockData = useMemo(() => {
+    const mockStartDate = new Date("2026-02-18T00:00:00");
+    return {
+      ramadan_year: "2026 / 1447",
+      fasting: Array.from({ length: 30 }, (_, i) => {
+        const current = new Date(mockStartDate);
+        current.setDate(mockStartDate.getDate() + i);
+        return {
+          day: i + 1,
+          date: current.toISOString().split("T")[0],
+          date_hijri: `${i + 1} Ramadan 1447`,
+          hijri_readable: `${i + 1} Ramadan 1447`,
+          time: { sahur: "05:15 AM", iftar: "06:30 PM" }
+        };
+      })
+    };
+  }, []);
 
-  const fetchRamadanData = async (forceCoords) => {
+  const fetchRamadanData = useCallback(async (forceCoords) => {
     setLoading(true);
     setError("");
     try {
-      let cached = readScheduleCache();
+      const cached = readScheduleCache();
       let coords = cached?.coords;
+      const cachedData = cached?.data;
 
       if (forceCoords || !coords) {
         try {
-          const browserCoords = await getBrowserCoords();
-          coords = browserCoords;
+          coords = await getBrowserCoords();
         } catch (e) {
           console.warn("Geolocation failed, using default", e);
           coords = coords || DEFAULT_COORDS;
@@ -713,26 +712,40 @@ function App() {
 
       const city = await resolveCityName(coords.lat, coords.lon);
       setCityName(city);
-      const res = await fetch(`${API_URL}?lat=${coords.lat}&lon=${coords.lon}&api_key=${API_KEY}`);
-      const json = await res.json();
-      if (json?.data && Array.isArray(json.data.fasting)) {
-        setData(json.data);
-        writeScheduleCache(json.data, Date.now());
+      let nextData = null;
+      try {
+        const res = await fetch(`${API_URL}?lat=${coords.lat}&lon=${coords.lon}&api_key=${API_KEY}`);
+        const json = await res.json();
+
+        if (json?.data && Array.isArray(json.data.fasting)) nextData = json.data;
+        else if (json?.fasting) nextData = json;
+      } catch {
+        nextData = null;
       }
-      else if (json?.fasting) {
-        setData(json);
-        writeScheduleCache(json, Date.now());
+
+      if (nextData) {
+        setData(nextData);
+        setUsingMockData(false);
+        writeScheduleCache({ data: nextData, coords, city, timestamp: Date.now() });
+      } else if (cachedData) {
+        setData(cachedData);
+        setUsingMockData(false);
+        setCityName(cached?.city || city);
+        setError("Live schedule update failed. Showing last saved schedule.");
+      } else {
+        setError("API Connection failed. Using offline schedule.");
+        setData(mockData);
+        setUsingMockData(true);
       }
-      else setError("Unexpected API response format.");
     } catch {
-      setError("API Connection failed. Using offline schedule.");
+      setError("Unable to determine location. Using offline schedule.");
       setData(mockData);
       setUsingMockData(true);
     }
     finally { setLoading(false); }
-  };
+  }, [mockData]);
 
-  useEffect(() => { fetchRamadanData(); }, []);
+  useEffect(() => { fetchRamadanData(); }, [fetchRamadanData]);
 
   return (
     <Router>

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Clock, Sun } from "lucide-react";
 import CountdownBlock from "./CountdownBlock";
 import CountdownSeparator from "./CountdownSeparator";
@@ -6,7 +6,7 @@ import TimingTile from "./TimingTile";
 
 function CountdownPanel({ timeLeft, currentStatus, sahurTime, iftarTime }) {
   return (
-    <motion.div
+    <Motion.div
       initial={{ scale: 0.95 }}
       animate={{ scale: 1 }}
       className="w-full glass-card rounded-[3rem] p-6 md:p-12 flex flex-col items-center border-white/5 shadow-2xl"
@@ -29,7 +29,7 @@ function CountdownPanel({ timeLeft, currentStatus, sahurTime, iftarTime }) {
         <TimingTile icon={<Clock size={20} />} label="SAHUR" time={sahurTime} active={currentStatus === "sahur"} />
         <TimingTile icon={<Sun size={20} />} label="IFTAR" time={iftarTime} active={currentStatus === "iftar"} />
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
