@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
@@ -9,6 +9,7 @@ const CACHE_KEY = "ramadan_schedule_cache_v1";
 const DEFAULT_COORDS = { lat: 24.8607, lon: 67.0011 };
 const API_URL = "https://islamicapi.com/api/v1/ramadan/";
 const API_KEY = "xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3";
+const BASE_SITE_URL = "https://ramadan-time-two.vercel.app";
 
 function readScheduleCache() {
   if (typeof window === "undefined") return null;
@@ -60,6 +61,63 @@ async function resolveCityName(lat, lon) {
   } catch {
     return "Your Location";
   }
+}
+
+function setMetaContent(attr, key, content) {
+  if (typeof document === "undefined" || !content) return;
+  let tag = document.head.querySelector(`meta[${attr}="${key}"]`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attr, key);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+}
+
+function setCanonicalLink(url) {
+  if (typeof document === "undefined" || !url) return;
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+  link.setAttribute("href", url);
+}
+
+function SeoMeta() {
+  const location = useLocation();
+  const meta = useMemo(() => {
+    if (location.pathname === "/ramadan") {
+      return {
+        title: "Ramadan Monthly Calendar | Sehri & Iftar Timings",
+        description:
+          "Browse the full Ramadan calendar with daily Sehri and Iftar timings for every fasting day.",
+        canonical: `${BASE_SITE_URL}/ramadan`,
+      };
+    }
+
+    return {
+      title: "Ramadan Sehri & Iftar Timings | Daily Countdown",
+      description:
+        "Check daily Sehri and Iftar timings with a live Ramadan countdown and monthly fasting calendar.",
+      canonical: `${BASE_SITE_URL}/`,
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    document.title = meta.title;
+    setCanonicalLink(meta.canonical);
+    setMetaContent("name", "description", meta.description);
+    setMetaContent("property", "og:title", meta.title);
+    setMetaContent("property", "og:description", meta.description);
+    setMetaContent("property", "og:url", meta.canonical);
+    setMetaContent("name", "twitter:title", meta.title);
+    setMetaContent("name", "twitter:description", meta.description);
+    setMetaContent("name", "twitter:url", meta.canonical);
+  }, [meta]);
+
+  return null;
 }
 
 // --- Components ---
@@ -749,6 +807,7 @@ function App() {
 
   return (
     <Router>
+      <SeoMeta />
       <div className="h-screen w-full relative overflow-hidden bg-black text-white selection:bg-sky-500/30">
         <div className="fixed inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: "url(/bg.avif)", opacity: "0.45" }} />
