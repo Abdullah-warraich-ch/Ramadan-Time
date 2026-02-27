@@ -58,6 +58,10 @@ function getLocationErrorMessage(error) {
   return "Location is off. Please turn on location and allow permission.";
 }
 
+function isLocationPermissionDenied(error) {
+  return error?.code === 1;
+}
+
 async function resolveCityName(lat, lon) {
   try {
     const response = await fetch(
@@ -738,6 +742,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cityName, setCityName] = useState("");
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [, setUsingMockData] = useState(false);
 
   const mockData = useMemo(() => {
@@ -758,32 +763,42 @@ function App() {
     };
   }, []);
 
-  const fetchRamadanData = useCallback(async (forceCoords) => {
+  const fetchRamadanData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const cached = readScheduleCache();
-      let coords = cached?.coords;
+      let coords = null;
       const cachedData = cached?.data;
 
-      if (forceCoords || !coords) {
-        try {
-          coords = await getBrowserCoords();
-        } catch (e) {
-          const locationError = getLocationErrorMessage(e);
+      try {
+        coords = await getBrowserCoords();
+        setLocationPermissionDenied(false);
+      } catch (e) {
+        const locationError = getLocationErrorMessage(e);
+        if (isLocationPermissionDenied(e)) {
+          setLocationPermissionDenied(true);
           setError(locationError);
-          setCityName("Location Permission Required");
-
-          if (cachedData) {
-            setData(cachedData);
-            setUsingMockData(false);
-            setCityName(cached?.city || "Location Permission Required");
-          } else {
-            setData(mockData);
-            setUsingMockData(true);
-          }
+          setCityName("");
+          setData(null);
+          setUsingMockData(false);
+          setLoading(false);
           return;
         }
+
+        setError(locationError);
+        setCityName("Location Permission Required");
+
+        if (cachedData) {
+          setData(cachedData);
+          setUsingMockData(false);
+          setCityName(cached?.city || "Location Permission Required");
+        } else {
+          setData(mockData);
+          setUsingMockData(true);
+        }
+        setLoading(false);
+        return;
       }
 
       const city = await resolveCityName(coords.lat, coords.lon);
@@ -823,6 +838,28 @@ function App() {
 
   useEffect(() => { fetchRamadanData(); }, [fetchRamadanData]);
 
+  if (locationPermissionDenied) {
+    return (
+      <div className="h-screen w-full bg-black text-white flex items-center justify-center px-6">
+        <div className="w-full max-w-md rounded-[2rem] border border-white/15 bg-white/5 backdrop-blur-xl p-8 text-center">
+          <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-rose-400">
+            <MapPin size={24} />
+          </div>
+          <h1 className="text-xl font-black uppercase tracking-wide mb-3">Location Permission Required</h1>
+          <p className="text-sm text-slate-300 mb-6">
+            {error || "This app needs your location to load accurate timings. Please allow location access."}
+          </p>
+          <button
+            onClick={fetchRamadanData}
+            className="w-full py-3 rounded-xl bg-white text-black font-black uppercase tracking-wider text-xs"
+          >
+            Allow Location
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <SeoMeta />
@@ -835,8 +872,8 @@ function App() {
         </div>
         <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
           <Routes>
-            <Route path="/" element={<Home data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} cityName={cityName} mockData={mockData} setData={setData} setUsingMockData={setUsingMockData} />} />
-            <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={() => fetchRamadanData(true)} errorMessage={error} />} />
+            <Route path="/" element={<Home data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} cityName={cityName} mockData={mockData} setData={setData} setUsingMockData={setUsingMockData} />} />
+            <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} />} />
           </Routes>
         </div>
       </div>
