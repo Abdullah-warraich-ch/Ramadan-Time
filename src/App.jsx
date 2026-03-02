@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles } from "lucide-react";
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles, Moon } from "lucide-react";
 import { parseTime, getTodayString, formatTo12Hour } from "./utils/time";
 import { allahNames } from "./data/names";
 
 const CACHE_KEY = "ramadan_schedule_cache_v1";
 const API_URL = "https://islamicapi.com/api/v1/ramadan/";
-const API_KEY = "xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
 const BASE_SITE_URL = "https://ramadan-time-two.vercel.app";
 
 function readScheduleCache() {
@@ -326,6 +326,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   const [charityProgress, setCharityProgress] = useState(() => Number(localStorage.getItem('charity_goal')) || 0);
   const [showQuran, setShowQuran] = useState(false);
   const [showCharity, setShowCharity] = useState(false);
+  const [showQadr, setShowQadr] = useState(false);
 
   const dailyHadiths = [
     { text: "The best among you are those who have the best manners and character.", source: "Sahih Bukhari" },
@@ -346,12 +347,16 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   useEffect(() => { localStorage.setItem('quran_juz', juzProgress.toString()); }, [juzProgress]);
   useEffect(() => { localStorage.setItem('charity_goal', charityProgress.toString()); }, [charityProgress]);
 
-  // Tasbih Persistence
-  const [count, setCount] = useState(() => {
-    const saved = localStorage.getItem('tasbih_count');
-    return saved ? parseInt(saved, 10) : 0;
+  // Tasbeeh Persistence (Individual counts)
+  const [tasbeehRecords, setTasbeehRecords] = useState(() => {
+    const saved = localStorage.getItem('tasbeeh_records');
+    return saved ? JSON.parse(saved) : {};
   });
-  useEffect(() => { localStorage.setItem('tasbih_count', count.toString()); }, [count]);
+  useEffect(() => { localStorage.setItem('tasbeeh_records', JSON.stringify(tasbeehRecords)); }, [tasbeehRecords]);
+
+  const count = tasbeehRecords[activeDhikr.english] || 0;
+  const incrementCount = () => setTasbeehRecords(prev => ({ ...prev, [activeDhikr.english]: (prev[activeDhikr.english] || 0) + 1 }));
+  const resetCount = () => setTasbeehRecords(prev => ({ ...prev, [activeDhikr.english]: 0 }));
 
   // Checklist logic
   const today = getTodayString();
@@ -552,12 +557,108 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
               <ToolkitItem color="rose" icon={<AlertCircle />} label="Mood Dua" onClick={() => setShowMoods(true)} />
               <ToolkitItem color="sky" icon={<BookOpen />} label="Quran Journey" progress={(juzProgress / 30) * 100} onClick={() => setShowQuran(true)} />
               <ToolkitItem color="violet" icon={<Heart />} label="Charity Jar" progress={charityProgress} onClick={() => setShowCharity(true)} />
+              <ToolkitItem color="indigo" icon={<Moon />} label="Laylat al-Qadr" onClick={() => setShowQadr(true)} />
             </div>
           </div>
         </div>
       </div>
 
       <FloatingActionMenu onShare={handleShareTimings} shareStatus={shareStatus} count={count} setShowTasbih={setShowTasbih} setShowChecklist={setShowChecklist} />
+
+      {/* Laylat al-Qadr Modal */}
+      <AnimatePresence>
+        {showQadr && (() => {
+          const ramadanStart = data?.fasting?.[0]?.date ? new Date(data.fasting[0].date) : null;
+          const qadrNights = [21, 23, 25, 27, 29];
+          const today = new Date();
+          let nextQadrNight = null;
+          let daysUntil = null;
+          let currentRamadanDay = null;
+
+          if (ramadanStart) {
+            const diffMs = today - ramadanStart;
+            currentRamadanDay = Math.floor(diffMs / 86400000) + 1;
+            const upcoming = qadrNights.find(n => n >= currentRamadanDay);
+            if (upcoming) {
+              nextQadrNight = upcoming;
+              daysUntil = upcoming - currentRamadanDay;
+            }
+          }
+
+          return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl">
+              <Motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden"
+              >
+                {/* Top accent */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-indigo-400 shadow-lg" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(139,92,246,0.08),_transparent_70%)] pointer-events-none" />
+                <button onClick={() => setShowQadr(false)} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"><X size={20} /></button>
+
+                <div className="text-center mb-8">
+                  <p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Ramadan Special</p>
+                  <h3 className="text-xl font-black italic">LAYLAT <span className="text-violet-400">AL-QADR</span></h3>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-30 mt-1">The Night of Power</p>
+                </div>
+
+                {/* Arabic */}
+                <div className="text-4xl font-arabic text-violet-300 mb-2 leading-loose text-center">لَيْلَةُ الْقَدْرِ</div>
+                <p className="text-[10px] text-center text-slate-400 italic mb-8 leading-relaxed max-w-[240px]">
+                  "Better than a thousand months" — Quran 97:3
+                </p>
+
+                {/* Status */}
+                {nextQadrNight ? (
+                  <div className="w-full space-y-4">
+                    <div className="p-6 rounded-[2rem] bg-violet-500/10 border border-violet-500/20 text-center">
+                      {daysUntil === 0 ? (
+                        <>
+                          <div className="text-5xl mb-2">🌙</div>
+                          <p className="text-lg font-black text-violet-300">Tonight Could Be</p>
+                          <p className="text-3xl font-black text-white">Night {nextQadrNight}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-violet-400/60 mt-1">Increase your ibadah tonight!</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-violet-400/60 mb-2">Next Possible Night</p>
+                          <p className="text-6xl font-black text-white">{daysUntil}</p>
+                          <p className="text-sm font-black text-violet-300">{daysUntil === 1 ? 'day' : 'days'} until Night <span className="text-white">{nextQadrNight}</span></p>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="w-full">
+                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 mb-3 text-center">The Odd Nights</p>
+                      <div className="grid grid-cols-5 gap-2">
+                        {qadrNights.map(night => (
+                          <div key={night} className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${currentRamadanDay && currentRamadanDay > night
+                            ? 'bg-white/3 border-white/5 opacity-30'
+                            : night === nextQadrNight && daysUntil === 0
+                              ? 'bg-violet-500/20 border-violet-400/50 ring-1 ring-violet-400/30'
+                              : 'bg-white/5 border-white/10'
+                            }`}>
+                            <Moon size={12} className={night === nextQadrNight ? 'text-violet-400' : 'text-white/30'} />
+                            <span className={`text-xs font-black mt-1 ${night === nextQadrNight ? 'text-violet-300' : 'text-white/50'}`}>{night}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 text-center">
+                    <div className="text-4xl mb-3">🤲</div>
+                    <p className="text-sm font-black text-white/60">All 5 blessed nights have passed.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-violet-400/50 mt-2">May Allah accept your ibadah!</p>
+                  </div>
+                )}
+              </Motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showTasbih && (
@@ -575,7 +676,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 {dhikrOptions.map((option, idx) => (
                   <button
                     key={idx}
-                    onClick={() => { setActiveDhikr(option); setCount(0); }}
+                    onClick={() => { setActiveDhikr(option); }}
                     className={`shrink-0 px-6 py-3 rounded-[1.5rem] border transition-all text-sm font-black ${activeDhikr.arabic === option.arabic ? 'bg-sky-500 border-sky-500 text-black shadow-lg shadow-sky-500/20' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'}`}
                   >
                     <span className="font-arabic text-lg block mb-1">{option.arabic}</span>
@@ -592,12 +693,12 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
               <div className="w-full flex flex-col gap-6">
                 <Motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setCount(p => p + 1)}
+                  onClick={incrementCount}
                   className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl flex items-center justify-center"
                 >
                   <Plus size={48} strokeWidth={3} />
                 </Motion.button>
-                <button onClick={() => setCount(0)} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">Reset Counter</button>
+                <button onClick={resetCount} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">Reset Counter</button>
               </div>
             </Motion.div>
           </div>
