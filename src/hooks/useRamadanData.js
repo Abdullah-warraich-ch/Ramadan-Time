@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const DEFAULT_COORDS = { lat: 24.8607, lon: 67.0011 };
 const RAMADAN_API_URL = "https://islamicapi.com/api/v1/ramadan/";
-const API_KEY = "xZaaeSeRVvFTVjojf6KQOBYT7aihHJAAnu3zdHQVTNTvjQR3";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
 
 function getCoords() {
   return new Promise((resolve) => {
