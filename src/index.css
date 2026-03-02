@@ -98,3 +98,31 @@ body {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar {
+  height: 4px;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
+  background: linear-gradient(to right, #7dd3fc, #38bdf8);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.4);
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb:hover {
+  background: #7dd3fc;
+}

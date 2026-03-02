@@ -191,8 +191,8 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
   const itemVariants = {
     open: (deg) => ({
       opacity: 1, scale: 1, rotate: 0,
-      x: Math.cos((deg * Math.PI) / 180) * 85,
-      y: Math.sin((deg * Math.PI) / 180) * 85,
+      x: Math.cos((deg * Math.PI) / 180) * 90,
+      y: Math.sin((deg * Math.PI) / 180) * 90,
       transition: { type: "spring", stiffness: 400, damping: 18 }
     }),
     closed: {
@@ -205,7 +205,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
     <div className="fixed bottom-10 right-10 z-[60]">
       <Motion.div
         animate={isOpen ? { scale: 1.5, opacity: 1 } : { scale: 0, opacity: 0 }}
-        className="absolute -inset-10 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute -inset-20 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"
       />
 
       <Motion.div variants={containerVariants} initial="closed" animate={isOpen ? "open" : "closed"} className="relative">
@@ -219,7 +219,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
         </Motion.button>
 
         <Motion.button
-          custom={-110} variants={itemVariants}
+          custom={-130} variants={itemVariants}
           onClick={() => { setShowChecklist(true); setIsOpen(false); }}
           className="absolute h-12 w-12 rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl text-white shadow-2xl flex flex-col items-center justify-center group hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors"
         >
@@ -228,7 +228,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
         </Motion.button>
 
         <Motion.button
-          custom={-130} variants={itemVariants} onClick={() => { onShare(); setIsOpen(false); }}
+          custom={-170} variants={itemVariants} onClick={() => { onShare(); setIsOpen(false); }}
           className="absolute h-12 w-12 rounded-2xl border border-white/20 bg-black/60 backdrop-blur-xl text-white shadow-2xl flex flex-col items-center justify-center group hover:bg-white/10 transition-colors"
         >
           {shareStatus === "idle" ? <Share2 size={16} /> : <Check size={16} className="text-emerald-400" />}
@@ -241,7 +241,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
         >
           <Plus size={24} className={`transition-transform duration-500 ${isOpen ? "rotate-[135deg]" : ""}`} />
           {count > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-black border-2 border-black">
+            <span className={`absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full  text-[10px] font-black   border-black ${isOpen ? 'bg-black/60 text-white' : 'bg-white text-black'}`}>
               {count > 99 ? '99+' : count}
             </span>
           )}
@@ -301,6 +301,22 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   const [showZakat, setShowZakat] = useState(false);
   const [activeMoodDua, setActiveMoodDua] = useState(null);
   const [activeName, setActiveName] = useState(null);
+
+  const dhikrOptions = [
+    { arabic: "سُبْحَانَ اللَّهِ", english: "Subhan Allah" },
+    { arabic: "الْحَمْدُ لِلَّهِ", english: "Alhamdulillah" },
+    { arabic: "اللَّهُ أَكْبَرُ", english: "Allahu Akbar" },
+    { arabic: "لَا إِلٰهَ إِلَّا اللّٰهُ", english: "La ilaha illallah" },
+    { arabic: "أَسْتَغْفِرُ اللّٰهَ", english: "Astaghfirullah" },
+    { arabic: "يَا حَيُّ يَا قَيُّومُ", english: "Ya Hayyu Ya Qayyum" },
+    { arabic: "حَسْبُنَا اللَّهُ", english: "Hasbunallahu" },
+    { arabic: "لَا حَوْلَ وَلَا قُوَّةَ", english: "La Hawla..." }
+  ];
+  const [activeDhikr, setActiveDhikr] = useState(() => {
+    const saved = localStorage.getItem('active_dhikr');
+    return saved ? JSON.parse(saved) : dhikrOptions[0];
+  });
+  useEffect(() => { localStorage.setItem('active_dhikr', JSON.stringify(activeDhikr)); }, [activeDhikr]);
 
   // New Features State
   const [juzProgress, setJuzProgress] = useState(() => Number(localStorage.getItem('quran_juz')) || 0);
@@ -544,12 +560,41 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
         {showTasbih && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
             <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-lg" /><button onClick={() => setShowTasbih(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
-              <div className="text-center mb-10"><p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Digital Tasbih</p><h3 className="text-xl font-black italic">COUNT YOUR <span className="text-sky-300">DHIKR</span></h3></div>
-              <div className="relative mb-10 text-[10rem] font-black tabular-nums leading-none text-white drop-shadow-2xl">{count}</div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-lg" />
+              <button onClick={() => setShowTasbih(false)} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"><X size={20} /></button>
+
+              <div className="text-center mb-6">
+                <p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Digital Tasbih</p>
+                <h3 className="text-xl font-black italic">COUNT YOUR <span className="text-sky-300">DHIKR</span></h3>
+              </div>
+
+              <div className="w-full flex overflow-x-auto gap-4 mb-10 pb-4 custom-scrollbar-horizontal scroll-smooth">
+                {dhikrOptions.map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setActiveDhikr(option); setCount(0); }}
+                    className={`shrink-0 px-6 py-3 rounded-[1.5rem] border transition-all text-sm font-black ${activeDhikr.arabic === option.arabic ? 'bg-sky-500 border-sky-500 text-black shadow-lg shadow-sky-500/20' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'}`}
+                  >
+                    <span className="font-arabic text-lg block mb-1">{option.arabic}</span>
+                    <span className="text-[9px] uppercase tracking-widest opacity-60">{option.english}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-col items-center mb-10">
+                <div className="text-[2rem] font-arabic text-sky-300 mb-2 opacity-80">{activeDhikr.arabic}</div>
+                <div className="relative text-[8rem] font-black tabular-nums leading-none text-white drop-shadow-2xl">{count}</div>
+              </div>
+
               <div className="w-full flex flex-col gap-6">
-                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => setCount(p => p + 1)} className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl">+</Motion.button>
-                <button onClick={() => setCount(0)} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400">Reset Counter</button>
+                <Motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCount(p => p + 1)}
+                  className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl flex items-center justify-center"
+                >
+                  <Plus size={48} strokeWidth={3} />
+                </Motion.button>
+                <button onClick={() => setCount(0)} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">Reset Counter</button>
               </div>
             </Motion.div>
           </div>
