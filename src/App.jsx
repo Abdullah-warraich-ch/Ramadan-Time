@@ -101,17 +101,19 @@ function SeoMeta() {
   const meta = useMemo(() => {
     if (location.pathname === "/ramadan") {
       return {
-        title: "Ramadan Monthly Calendar | Sehri & Iftar Timings",
+        title: "Ramadan 2026 Monthly Calendar | All Sehri & Iftar Timings",
         description:
-          "Browse the full Ramadan calendar with daily Sehri and Iftar timings for every fasting day.",
+          "View the complete Ramadan 2026 fasting calendar with daily Sehri and Iftar timings for all 30 days. Accurate prayer times based on your location.",
+        keywords: "Ramadan 2026 calendar, Ramadan schedule, 30 days fasting, Sehri Iftar all days, full Ramadan timetable",
         canonical: `${BASE_SITE_URL}/ramadan`,
       };
     }
 
     return {
-      title: "Ramadan Sehri & Iftar Timings | Daily Countdown",
+      title: "Ramadan Sehri & Iftar Timings 2026 | Live Countdown & Calendar",
       description:
-        "Check daily Sehri and Iftar timings with a live Ramadan countdown and monthly fasting calendar.",
+        "Get accurate Sehri and Iftar timings for Ramadan 2026 based on your GPS location. Live countdown, Digital Tasbih, daily duas, Zakat calculator and more.",
+      keywords: "Ramadan 2026, Sehri time today, Iftar time today, Ramadan countdown, prayer times, fasting app, Tasbih, duas",
       canonical: `${BASE_SITE_URL}/`,
     };
   }, [location.pathname]);
@@ -120,6 +122,7 @@ function SeoMeta() {
     document.title = meta.title;
     setCanonicalLink(meta.canonical);
     setMetaContent("name", "description", meta.description);
+    setMetaContent("name", "keywords", meta.keywords);
     setMetaContent("property", "og:title", meta.title);
     setMetaContent("property", "og:description", meta.description);
     setMetaContent("property", "og:url", meta.canonical);
