@@ -184,7 +184,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setStage(permission === "granted" ? "settings" : "prompt")}
-            className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-glass)] bg-[var(--surface-glass)] text-[var(--text-main)] shadow-2xl backdrop-blur-xl hover:bg-sky-500/10 hover:border-sky-500/40 transition-colors"
+            className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-glass)] bg-slate-950/98 text-[var(--text-main)] shadow-2xl backdrop-blur-2xl hover:bg-slate-900 hover:border-sky-500/40 transition-colors"
           >
             {permission === "granted" ? (
               <Bell className="text-sky-400" size={20} />
@@ -200,7 +200,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
             initial={{ opacity: 0, scale: 0.9, x: -20, y: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, x: -20, y: 20 }}
-            className="pointer-events-auto relative w-[320px] glass-card rounded-[2rem] p-6 shadow-2xl border-sky-500/20"
+            className="pointer-events-auto relative w-[320px] bg-slate-950/98 border border-white/5 backdrop-blur-2xl rounded-[2rem] p-6 shadow-2xl shadow-black/50"
           >
             <button
               onClick={() => setStage("collapsed")}
@@ -240,7 +240,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
             initial={{ opacity: 0, scale: 0.9, x: -20, y: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, x: -20, y: 20 }}
-            className="pointer-events-auto relative w-[280px] glass-card rounded-[2rem] p-6 shadow-2xl"
+            className="pointer-events-auto relative w-[280px] bg-slate-950/98 border border-white/5 backdrop-blur-2xl rounded-[2rem] p-6 shadow-2xl shadow-black/50"
           >
             <button
               onClick={() => setStage("collapsed")}
@@ -250,14 +250,14 @@ export default function PushSchedulerPanel({ data, cityName }) {
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-glass)] text-sky-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-sky-400">
                 <Settings2 size={18} />
               </div>
               <h4 className="text-sm font-black text-[var(--text-main)] uppercase tracking-tight">Alert Settings</h4>
             </div>
 
             <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-glass)]">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={14} className="text-emerald-400" />
                   <span className="text-[10px] font-bold text-[var(--text-main)]">Status</span>
@@ -265,7 +265,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
                 <span className="text-[9px] font-black uppercase text-emerald-400">{isSubscribed ? "Active" : "Connecting"}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-glass)]">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
                 <div className="flex items-center gap-2">
                   <Info size={14} className="text-sky-400" />
                   <span className="text-[10px] font-bold text-[var(--text-main)]">Region</span>
@@ -278,7 +278,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
               <button
                 onClick={() => scheduleApiNotifications(false)}
                 disabled={status.startsWith("scheduling")}
-                className="rounded-xl border border-[var(--border-glass)] bg-[var(--surface-glass)] py-2.5 text-[9px] font-black uppercase tracking-wider text-[var(--text-main)] hover:bg-[var(--surface-glass-hover)] transition-colors disabled:opacity-50"
+                className="rounded-xl border border-white/10 bg-white/5 py-2.5 text-[9px] font-black uppercase tracking-wider text-[var(--text-main)] hover:bg-white/10 transition-colors disabled:opacity-50"
               >
                 Sync Now
               </button>
@@ -304,7 +304,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-xl shadow-2xl"
+            className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-2xl shadow-2xl"
           >
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <p className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-400">Alerts Synchronized</p>

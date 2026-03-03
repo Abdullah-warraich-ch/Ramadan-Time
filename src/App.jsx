@@ -262,7 +262,7 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`relative z-10 h-14 w-14 rounded-[1.5rem] flex items-center justify-center transition-all duration-500 border-2 shadow-xl ${isOpen ? 'bg-[var(--text-main)] text-[var(--bg-app)] border-[var(--text-main)]' : 'bg-[var(--surface-glass)] text-[var(--text-main)] border-[var(--border-glass)] hover:bg-[var(--surface-glass-hover)]'}`}
+          className={`relative z-10 h-14 w-14 rounded-[1.5rem] flex items-center justify-center transition-all duration-500 border-2 shadow-xl ${isOpen ? 'bg-[var(--text-main)] text-[var(--bg-app)] border-[var(--text-main)]' : 'bg-slate-950/98 backdrop-blur-2xl text-[var(--text-main)] border-[var(--border-glass)] hover:bg-slate-900'}`}
         >
           <Plus size={24} className={`transition-transform duration-500 ${isOpen ? "rotate-[135deg]" : ""}`} />
           {count > 0 && (
@@ -396,7 +396,7 @@ function TimingTile({ icon, label, time, active, theme }) {
 
 // --- Page: Home (Main Tracker) ---
 
-function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setData, setUsingMockData, theme, setTheme }) {
+function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setData, setUsingMockData, theme, setTheme, installPrompt, handleInstall, isOnline }) {
   const defaultChecklist = useMemo(
     () => ({ fasting: false, prayers: false, taraweeh: false, quran: false, charity: false }),
     []
@@ -436,34 +436,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   const [showQuran, setShowQuran] = useState(false);
   const [showCharity, setShowCharity] = useState(false);
   const [showQadr, setShowQadr] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState(null);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-    };
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === "accepted") setInstallPrompt(null);
-  };
 
   const dailyHadiths = [
     { text: "The best among you are those who have the best manners and character.", source: "Sahih Bukhari" },
@@ -622,7 +594,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="p-2.5 rounded-2xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] text-[var(--text-main)] transition-all duration-300"
@@ -630,6 +602,17 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+
+            {installPrompt && (
+              <button
+                onClick={handleInstall}
+                className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-lg shadow-emerald-500/5"
+              >
+                <Plus size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+                <span className="hidden xs:inline">Install</span>
+              </button>
+            )}
+
             <Link
               to="/ramadan"
               className="group flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 px-5 py-2.5 rounded-2xl text-[10px] sm:text-xs font-black tracking-[.18em] uppercase text-sky-400 transition-all duration-300"
@@ -654,29 +637,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </Motion.div>
           )}
 
-          {installPrompt && (
-            <Motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="w-full mb-6"
-            >
-              <div className="glass-card rounded-3xl p-5 border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
-                    <img src="/icons/icon-192.png" alt="App Icon" className="h-8 w-8 rounded-lg" />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h5 className="text-xs font-black text-[var(--text-main)] uppercase tracking-tight">Install Ramadan Journey</h5>
-                    <p className="text-[10px] text-[var(--text-muted)] font-medium">Add to home screen for faster access and offline use.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setInstallPrompt(null)} className="px-4 py-2 text-[10px] font-black uppercase text-[var(--text-dim)]">Later</button>
-                  <button onClick={handleInstall} className="bg-sky-500 hover:bg-sky-400 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-sky-500/20 transition-all">Install Now</button>
-                </div>
-              </div>
-            </Motion.div>
-          )}
         </AnimatePresence>
 
         <div className="w-full flex flex-col items-center gap-4">
@@ -1197,6 +1157,49 @@ function App() {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [, setUsingMockData] = useState(false);
 
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      // Auto-show modal after a delay if not dismissed this session and not already installed
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (!isStandalone && sessionStorage.getItem("pwa_modal_dismissed") !== "true") {
+        setTimeout(() => setShowInstallModal(true), 3000);
+      }
+    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") {
+      setInstallPrompt(null);
+      setShowInstallModal(false);
+    }
+  };
+
+  const dismissInstallModal = () => {
+    setShowInstallModal(false);
+    sessionStorage.setItem("pwa_modal_dismissed", "true");
+  };
+
   useEffect(() => {
     localStorage.setItem("ramadan_theme", theme);
     if (theme === "light") {
@@ -1363,8 +1366,54 @@ function App() {
         </div>
         <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
           <PushSchedulerPanel data={data} cityName={cityName} />
+
+          <AnimatePresence>
+            {showInstallModal && !locationPermissionDenied && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/40 backdrop-blur-md">
+                <Motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  className="w-full max-w-sm bg-slate-950/98 backdrop-blur-2xl rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-white/5"
+                >
+                  <button onClick={dismissInstallModal} className="absolute top-8 right-8 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">
+                    <X size={20} />
+                  </button>
+
+                  <div className="relative mb-8">
+                    <div className="absolute -inset-4 bg-sky-500/20 blur-2xl rounded-full" />
+                    <img src="/icons/icon-512.png" alt="App Icon" className="relative h-24 w-24 rounded-[2rem] shadow-2xl border border-white/10" />
+                  </div>
+
+                  <div className="text-center mb-8">
+                    <p className="text-[10px] font-black tracking-[.4em] uppercase text-sky-400 mb-2">PWA INSTALL</p>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic">RAMADAN <span className="text-sky-400">JOURNEY</span></h3>
+                    <p className="text-xs text-[var(--text-muted)] font-medium mt-3 leading-relaxed">
+                      Install our app for a faster experience, offline access to timings, and instant notifications.
+                    </p>
+                  </div>
+
+                  <div className="w-full space-y-3">
+                    <button
+                      onClick={handleInstall}
+                      className="w-full py-4 rounded-2xl bg-sky-500 text-white font-black uppercase tracking-widest text-[10px] hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20"
+                    >
+                      Install App Now
+                    </button>
+                    <button
+                      onClick={dismissInstallModal}
+                      className="w-full py-4 rounded-2xl bg-[var(--surface-glass)] border border-[var(--border-glass)] text-[var(--text-main)] font-black uppercase tracking-widest text-[10px] hover:bg-[var(--surface-glass-hover)] transition-all"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </Motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
           <Routes>
-            <Route path="/" element={<Home data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} cityName={cityName} mockData={mockData} setData={setData} setUsingMockData={setUsingMockData} theme={theme} setTheme={setTheme} />} />
+            <Route path="/" element={<Home data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} cityName={cityName} mockData={mockData} setData={setData} setUsingMockData={setUsingMockData} theme={theme} setTheme={setTheme} installPrompt={installPrompt} handleInstall={handleInstall} isOnline={isOnline} />} />
             <Route path="/ramadan" element={<RamadanCalendar data={data} loading={loading} onRetry={fetchRamadanData} errorMessage={error} theme={theme} />} />
           </Routes>
         </div>
