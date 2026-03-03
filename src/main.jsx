@@ -3,6 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch(() => {
+      // Keep app running even if SW registration fails.
+    });
+  });
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
