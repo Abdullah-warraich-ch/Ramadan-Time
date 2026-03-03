@@ -143,40 +143,44 @@ const safeClone = (element, props) => {
 
 function ToolkitItem({ icon, label, onClick, color, progress }) {
   const accentColors = {
-    emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-    indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-    rose: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-    sky: "text-sky-400 bg-sky-500/10 border-sky-500/20",
-    violet: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+    emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40",
+    amber: "text-amber-400 bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/20 group-hover:border-amber-500/40",
+    indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40",
+    rose: "text-rose-400 bg-rose-500/10 border-rose-500/20 group-hover:bg-rose-500/20 group-hover:border-rose-500/40",
+    sky: "text-sky-400 bg-sky-500/10 border-sky-500/20 group-hover:bg-sky-500/20 group-hover:border-sky-500/40",
+    violet: "text-violet-400 bg-violet-500/10 border-violet-500/20 group-hover:bg-violet-500/20 group-hover:border-violet-500/40",
   };
-
+  const glowColors = {
+    emerald: "rgba(52,211,153,0.12)", amber: "rgba(245,158,11,0.12)",
+    indigo: "rgba(99,102,241,0.12)", rose: "rgba(244,63,94,0.12)",
+    sky: "rgba(125,211,252,0.12)", violet: "rgba(167,139,250,0.12)",
+  };
   const progressColors = {
-    emerald: "bg-emerald-500",
-    amber: "bg-amber-500",
-    indigo: "bg-indigo-500",
-    rose: "bg-rose-500",
-    sky: "bg-sky-500",
-    violet: "bg-violet-500",
+    emerald: "bg-emerald-500", amber: "bg-amber-500", indigo: "bg-indigo-500",
+    rose: "bg-rose-500", sky: "bg-sky-500", violet: "bg-violet-500",
   };
 
   return (
     <Motion.button
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.03, y: -5, boxShadow: `0 16px 40px ${glowColors[color]}` }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`group relative p-5 rounded-[2rem] bg-white/5 border border-white/5 hover:border-white/10 transition-all flex flex-col items-center justify-center text-center overflow-hidden h-32`}
+      className="group relative p-5 rounded-[2rem] bg-white/[0.04] border border-white/[0.06] transition-all duration-300 flex flex-col items-center justify-center text-center overflow-hidden h-32"
     >
-      <div className={`p-3 rounded-2xl mb-2 transition-transform group-hover:scale-110 duration-500 ${accentColors[color]}`}>
-        {safeClone(icon, { size: 18 })}
+      {/* subtle radial glow on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${glowColors[color]} 0%, transparent 70%)` }} />
+      <div className={`relative p-3 rounded-2xl mb-2.5 border transition-all duration-300 ${accentColors[color]}`}>
+        {safeClone(icon, { size: 17 })}
       </div>
-      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 group-hover:text-white/80 transition-colors uppercase">{label}</p>
+      <p className="text-[8.5px] font-black uppercase tracking-[0.18em] text-white/40 group-hover:text-white/75 transition-colors duration-300 leading-tight">{label}</p>
       {progress !== undefined && !isNaN(progress) && (
-        <div className="w-10 h-1 rounded-full bg-white/5 mt-3 overflow-hidden">
+        <div className="w-12 h-[3px] rounded-full bg-white/5 mt-2.5 overflow-hidden">
           <Motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            className={`h-full ${progressColors[color]}`}
+            animate={{ width: `${Math.min(100, progress)}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className={`h-full rounded-full ${progressColors[color]}`}
           />
         </div>
       )}
@@ -254,34 +258,115 @@ function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setSho
   );
 }
 
-function CountdownBlock({ value, label, highlight }) {
+function CountdownBlock({ value, label, highlight, isSeconds }) {
   return (
-    <div className="flex flex-col items-center shrink min-w-0">
-      <div className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tabular-nums tracking-tighter leading-[0.9] filter drop-shadow-xl ${highlight ? 'text-sky-300' : 'text-white'} transition-all duration-500`}>
+    <div className={`flex flex-col items-center shrink min-w-0 ${isSeconds ? 'animate-blink-sec' : ''}`}>
+      <Motion.div
+        key={value}
+        initial={{ opacity: 0.4, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tabular-nums tracking-tighter leading-[0.9] ${highlight
+          ? 'text-sky-300 drop-shadow-[0_0_24px_rgba(125,211,252,0.45)]'
+          : 'text-white drop-shadow-xl'
+          } transition-colors duration-500`}
+      >
         {value}
-      </div>
-      <span className="text-[9px] md:text-[11px] tracking-[0.2em] sm:tracking-[0.3em] uppercase font-bold text-slate-400 opacity-60 shrink-0">{label}</span>
+      </Motion.div>
+      <span className="text-[9px] md:text-[11px] tracking-[0.25em] uppercase font-black text-white/25 mt-1 shrink-0">{label}</span>
     </div>
+  );
+}
+
+function RamadanProgressRing({ currentDay }) {
+  const percentage = (currentDay / 30) * 100;
+  const circumference = 2 * Math.PI * 45; // r=45
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <Motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="w-full max-w-2xl px-1 mt-4"
+    >
+      <div className="glass-card rounded-[2rem] p-6 flex items-center justify-between border-white/5 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-transparent pointer-events-none" />
+        <div className="z-10">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-sky-400/80 mb-1.5 flex items-center gap-1.5">
+            Ramadan Journey
+          </p>
+          <h4 className="text-xl font-black text-white italic">
+            DAY <span className="text-sky-300">{currentDay}</span> <span className="text-white/20 font-light">/ 30</span>
+          </h4>
+          <p className="text-[10px] text-white/40 font-medium mt-1">
+            {currentDay >= 30 ? "Ramadan Complete! Eid Mubarak!" : `${30 - currentDay} days remaining in this blessed month`}
+          </p>
+        </div>
+
+        <div className="relative w-20 h-20 shrink-0">
+          <svg className="w-full h-full" viewBox="0 0 100 100">
+            <circle
+              className="text-white/5 stroke-current"
+              strokeWidth="8"
+              fill="transparent"
+              r="45"
+              cx="50"
+              cy="50"
+            />
+            <circle
+              className="text-sky-400 stroke-current ring-progress"
+              strokeWidth="8"
+              strokeLinecap="round"
+              fill="transparent"
+              r="45"
+              cx="50"
+              cy="50"
+              style={{
+                strokeDasharray: circumference,
+                strokeDashoffset: offset,
+              }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white/80">
+            {Math.round(percentage)}%
+          </div>
+        </div>
+      </div>
+    </Motion.div>
   );
 }
 
 function CountdownSeparator() {
   return (
-    <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-thin text-white/10 mt-0 select-none shrink-0">:</div>
+    <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-thin text-white/10 select-none shrink-0 pb-4">:</div>
   );
 }
 
 function TimingTile({ icon, label, time, active }) {
   return (
-    <div className={`group p-2 sm:p-4 md:p-6 rounded-[1rem] sm:rounded-[1.5rem] md:rounded-[2rem] border transition-all duration-700 relative overflow-hidden flex flex-col items-center justify-center shrink-0 ${active ? 'bg-white/10 border-white/20 scale-[1.02] shadow-xl ring-1 ring-white/10' : 'bg-white/5 border-transparent opacity-40 hover:opacity-70 hover:bg-white/8'}`}>
+    <div className={`group p-3 sm:p-5 md:p-7 rounded-[1.25rem] sm:rounded-[1.75rem] md:rounded-[2.25rem] border transition-all duration-500 relative overflow-hidden flex flex-col items-center justify-center ${active
+      ? 'bg-white/[0.08] border-white/20 shadow-[0_8px_32px_rgba(125,211,252,0.1)] ring-1 ring-white/10'
+      : 'bg-white/[0.03] border-white/5 opacity-45 hover:opacity-65 hover:bg-white/[0.05]'
+      }`}>
       {active && (
-        <div className="absolute inset-0 bg-gradient-to-br from-sky-400/5 to-transparent pointer-none" />
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-400/8 via-transparent to-emerald-400/5 pointer-events-none" />
+          {/* pulsing active dot */}
+          <span className="absolute top-3 right-3 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-50" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
+          </span>
+        </>
       )}
-      <div className={`w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center rounded-lg sm:rounded-xl md:rounded-2xl mb-1 sm:mb-3 md:mb-4 transition-transform group-hover:scale-110 duration-500 ${active ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-white/5 text-white/30'}`}>
+      <div className={`w-7 h-7 sm:w-11 sm:h-11 md:w-13 md:h-13 flex items-center justify-center rounded-xl md:rounded-2xl mb-2 sm:mb-3 md:mb-4 transition-all duration-300 group-hover:scale-110 ${active ? 'bg-white text-black shadow-lg shadow-white/15' : 'bg-white/5 text-white/25'
+        }`}>
         {safeClone(icon, { size: 14 })}
       </div>
-      <p className={`text-[6px] sm:text-[8px] md:text-[9px] lg:text-[11px] font-black tracking-[.1em] sm:tracking-[.2em] uppercase mb-0.5 sm:mb-1 ${active ? 'text-sky-300/80' : 'text-white/20'}`}>{label}</p>
-      <p className={`text-sm sm:text-lg md:text-2xl lg:text-3xl font-black tracking-tight ${active ? 'text-white' : 'text-white/30'}`}>{time}</p>
+      <p className={`text-[7px] sm:text-[9px] md:text-[10px] font-black tracking-[.15em] sm:tracking-[.25em] uppercase mb-1 sm:mb-1.5 ${active ? 'text-sky-300/80' : 'text-white/20'
+        }`}>{label}</p>
+      <p className={`text-sm sm:text-xl md:text-2xl lg:text-3xl font-black tracking-tight ${active ? 'text-white' : 'text-white/25'
+        }`}>{time}</p>
     </div>
   );
 }
@@ -449,7 +534,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <div className="relative z-10 w-full h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Synchronizing Schedule...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Timing Loading...</p>
         </div>
       </div>
     );
@@ -490,66 +575,111 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-5xl px-6 py-4 flex flex-col justify-start items-center">
-        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-2 mb-8">
+      <div className="w-full max-w-5xl px-5 pt-5 pb-4 flex flex-col justify-start items-center">
+
+        {/* ── Header ── */}
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-3 mb-7">
           <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-none text-white">
-              RAMADAN <span className="opacity-30 font-medium">{data.ramadan_year}</span>
-            </h1>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 underline-offset-4">
-              <span className="text-[10px] md:text-xs text-slate-400 font-bold tracking-[.3em] uppercase">{todayData.hijri_readable}</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[9px] md:text-xs font-bold text-slate-300">
-                <MapPin size={10} className="text-sky-400" /> {cityName || "Your Location"}
+            <div className="flex items-center justify-center md:justify-start gap-2.5 mb-0.5">
+              <span className="text-2xl select-none" aria-hidden>🌙</span>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase leading-none text-white">
+                RAMADAN <span className="text-white/25 font-light">{data.ramadan_year}</span>
+              </h1>
+            </div>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
+              <span className="text-[9px] md:text-[10px] text-white/35 font-bold tracking-[.28em] uppercase">{todayData.hijri_readable}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/8 px-2.5 py-0.5 text-[9px] font-bold text-sky-300/80">
+                <MapPin size={9} className="text-sky-400" /> {cityName || "Your Location"}
               </span>
             </div>
           </div>
-          <Link to="/ramadan" className="group relative overflow-hidden bg-white/5 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/10 text-[10px] sm:text-xs font-black tracking-[.2em] text-white hover:bg-white/10 transition-all">
-            <CalendarDays size={14} className="inline mr-2 text-sky-300" /> CALENDAR
+          <Link
+            to="/ramadan"
+            className="group flex items-center gap-2 bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 hover:border-sky-500/30 px-5 py-2.5 rounded-2xl text-[10px] sm:text-xs font-black tracking-[.18em] uppercase text-white/70 hover:text-white transition-all duration-300"
+          >
+            <CalendarDays size={14} className="text-sky-400 group-hover:text-sky-300 transition-colors" /> CALENDAR
           </Link>
         </div>
 
         <div className="w-full flex flex-col items-center gap-4">
-          <Motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full glass-card rounded-[3rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px]" />
+          {/* ── Countdown Card ── */}
+          <Motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full glass-card rounded-[2.5rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden"
+          >
+            {/* ambient glows */}
+            <div className="absolute -top-28 -left-28 w-72 h-72 bg-sky-500/10 rounded-full blur-[110px] pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-emerald-500/7 rounded-full blur-[90px] pointer-events-none" />
+
+            {/* Progress bar */}
             <div className="w-full max-w-lg mb-6">
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-slate-500">Day Progress</span>
-                <span className="text-xs font-black tabular-nums text-white/60">{Math.round(timeProgress)}%</span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[9px] uppercase tracking-[0.4em] font-black text-white/25">Day Progress</span>
+                <span className="text-[10px] font-black tabular-nums text-white/40">{Math.round(timeProgress)}%</span>
               </div>
-              <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
-                <Motion.div className="h-full bg-gradient-to-r from-sky-400 to-emerald-300 shadow-[0_0_10px_rgba(125,211,252,0.3)]" animate={{ width: `${timeProgress}%` }} />
+              <div className="h-[5px] rounded-full bg-white/[0.04] overflow-hidden border border-white/[0.04]">
+                <Motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400 shadow-[0_0_12px_rgba(125,211,252,0.4)]"
+                  animate={{ width: `${timeProgress}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                />
               </div>
             </div>
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-[10px] font-black tracking-[0.5em] uppercase text-sky-300/60">{currentStatus === "iftar" ? "Until Iftar" : "Until Sahur"}</span>
+
+            {/* Status label */}
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-[9px] font-black tracking-[0.5em] uppercase text-sky-300/50">
+                {currentStatus === "iftar" ? "⬇ Until Iftar" : "⬆ Until Sahur"}
+              </span>
             </div>
+
+            {/* Digits */}
             <div className="flex items-center justify-center gap-3 md:gap-6 mb-8">
               <CountdownBlock value={timeLeft.h} label="Hrs" />
               <CountdownSeparator />
               <CountdownBlock value={timeLeft.m} label="Min" />
               <CountdownSeparator />
-              <CountdownBlock value={timeLeft.s} label="Sec" highlight={currentStatus === "iftar"} />
+              <CountdownBlock value={timeLeft.s} label="Sec" highlight={currentStatus === "iftar"} isSeconds={true} />
             </div>
-            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
+
+            {/* Timing tiles */}
+            <div className="grid grid-cols-2 gap-3 md:gap-5 w-full max-w-2xl">
               <TimingTile icon={<Clock />} label="SAHUR" time={todayData?.time ? formatTo12Hour(todayData.time.sahur) : "--:--"} active={currentStatus === "sahur"} />
               <TimingTile icon={<Sun />} label="IFTAR" time={todayData?.time ? formatTo12Hour(todayData.time.iftar) : "--:--"} active={currentStatus === "iftar"} />
             </div>
           </Motion.div>
 
-          <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="w-full max-w-2xl px-2 mt-4">
-            <div className="p-6 rounded-[2.5rem] bg-gradient-to-br from-sky-500/10 to-indigo-500/5 border border-white/10 backdrop-blur-md relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Sparkles size={40} className="text-sky-300" /></div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-400 mb-3 flex items-center gap-2"><Sparkles size={12} /> Daily Inspiration</p>
-              <p className="text-sm md:text-base font-medium italic text-slate-200 leading-relaxed mb-4">"{inspiration.text}"</p>
+          {/* ── Ramadan Progress Ring ── */}
+          <RamadanProgressRing currentDay={todayData?.day || 1} />
+
+          {/* ── Daily Inspiration ── */}
+          <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="w-full max-w-2xl px-1 mt-3">
+            <div className="p-5 rounded-[2rem] bg-gradient-to-br from-sky-500/[0.08] to-indigo-500/[0.04] border border-white/[0.08] backdrop-blur-md relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-8 group-hover:opacity-15 transition-opacity duration-500 pointer-events-none">
+                <Sparkles size={36} className="text-sky-300" />
+              </div>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-sky-400/80 mb-2.5 flex items-center gap-1.5">
+                <Sparkles size={11} /> Daily Inspiration
+              </p>
+              <p className="text-sm font-medium italic text-white/75 leading-relaxed mb-3">&ldquo;{inspiration.text}&rdquo;</p>
               <div className="flex justify-between items-center">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">— {inspiration.source}</span>
-                <button onClick={() => { navigator.clipboard.writeText(`"${inspiration.text}" — ${inspiration.source}`); alert("Inspiration copied!"); }} className="text-[9px] font-black uppercase tracking-widest text-sky-400/60 hover:text-sky-400">Copy</button>
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/25">&mdash; {inspiration.source}</span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`"${inspiration.text}" — ${inspiration.source}`); }}
+                  className="text-[8px] font-black uppercase tracking-widest text-sky-400/50 hover:text-sky-300 transition-colors"
+                >Copy</button>
               </div>
             </div>
           </Motion.div>
 
-          <div className="w-full max-w-2xl px-2 mt-8 mb-24">
-            <div className="flex justify-between items-center mb-6"><h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">Spiritual Hub</h3><span className="h-px flex-1 bg-white/5 mx-6" /></div>
+          {/* ── Spiritual Hub ── */}
+          <div className="w-full max-w-2xl px-1 mt-7 mb-4">
+            <div className="flex items-center gap-4 mb-5">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-white/8" />
+              <h3 className="text-[9px] font-black uppercase tracking-[0.45em] text-white/25">Spiritual Hub</h3>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/8" />
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <ToolkitItem color="amber" icon={<Info />} label="99 Names" onClick={() => setShowNames(true)} />
               <ToolkitItem color="emerald" icon={<Plus />} label="Zakat Calc" onClick={() => setShowZakat(true)} />
@@ -557,9 +687,20 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
               <ToolkitItem color="rose" icon={<AlertCircle />} label="Mood Dua" onClick={() => setShowMoods(true)} />
               <ToolkitItem color="sky" icon={<BookOpen />} label="Quran Journey" progress={(juzProgress / 30) * 100} onClick={() => setShowQuran(true)} />
               <ToolkitItem color="violet" icon={<Heart />} label="Charity Jar" progress={charityProgress} onClick={() => setShowCharity(true)} />
-              <ToolkitItem color="indigo" icon={<Moon />} label="Laylat al-Qadr" onClick={() => setShowQadr(true)} />
+              <ToolkitItem color="indigo" icon={<Moon />} label="Night of Power" onClick={() => setShowQadr(true)} />
             </div>
           </div>
+
+          {/* ── Footer ── */}
+          <footer className="w-full max-w-2xl px-2 pt-6 pb-28 border-t border-white/[0.05] text-center">
+            <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-white/20 mb-1">
+              Made with ❤️ for Muslims everywhere &nbsp;·&nbsp; رمضان مبارك
+            </p>
+            <p className="text-[7.5px] text-white/12 tracking-widest uppercase">
+              MIT License &nbsp;·&nbsp; © 2026 Abdullah Warraich
+            </p>
+          </footer>
+
         </div>
       </div>
 
@@ -662,44 +803,61 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
       <AnimatePresence>
         {showTasbih && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 flex flex-col items-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-sky-500 shadow-lg" />
-              <button onClick={() => setShowTasbih(false)} className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors"><X size={20} /></button>
+          <div className="modal-backdrop">
+            <Motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 26 }}
+              className="w-full max-w-sm glass-card rounded-[2.8rem] p-8 flex flex-col items-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-400 to-cyan-300 shadow-[0_0_12px_rgba(125,211,252,0.5)]" />
+              <button onClick={() => setShowTasbih(false)} className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all">
+                <X size={16} />
+              </button>
 
-              <div className="text-center mb-6">
-                <p className="text-[10px] font-black tracking-[.4em] uppercase opacity-40 mb-2">Digital Tasbih</p>
-                <h3 className="text-xl font-black italic">COUNT YOUR <span className="text-sky-300">DHIKR</span></h3>
-              </div>
+              <p className="text-[9px] font-black tracking-[.45em] uppercase text-white/30 mb-1 mt-2">Digital Tasbih</p>
+              <h3 className="text-lg font-black mb-6">COUNT YOUR <span className="text-sky-300">DHIKR</span></h3>
 
-              <div className="w-full flex overflow-x-auto gap-4 mb-10 pb-4 custom-scrollbar-horizontal scroll-smooth">
+              {/* Dhikr selector */}
+              <div className="w-full flex overflow-x-auto gap-2.5 mb-7 pb-2 custom-scrollbar-horizontal scroll-smooth">
                 {dhikrOptions.map((option, idx) => (
                   <button
                     key={idx}
-                    onClick={() => { setActiveDhikr(option); }}
-                    className={`shrink-0 px-6 py-3 rounded-[1.5rem] border transition-all text-sm font-black ${activeDhikr.arabic === option.arabic ? 'bg-sky-500 border-sky-500 text-black shadow-lg shadow-sky-500/20' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'}`}
+                    onClick={() => setActiveDhikr(option)}
+                    className={`shrink-0 px-4 py-2.5 rounded-2xl border transition-all ${activeDhikr.arabic === option.arabic
+                      ? 'bg-sky-500 border-sky-400 text-black shadow-[0_4px_20px_rgba(125,211,252,0.3)]'
+                      : 'bg-white/[0.04] border-white/8 text-white/50 hover:border-white/20 hover:text-white/80'
+                      }`}
                   >
-                    <span className="font-arabic text-lg block mb-1">{option.arabic}</span>
-                    <span className="text-[9px] uppercase tracking-widest opacity-60">{option.english}</span>
+                    <span className="font-arabic text-base block mb-0.5">{option.arabic}</span>
+                    <span className="text-[8px] uppercase tracking-widest opacity-60">{option.english}</span>
                   </button>
                 ))}
               </div>
 
-              <div className="flex flex-col items-center mb-10">
-                <div className="text-[2rem] font-arabic text-sky-300 mb-2 opacity-80">{activeDhikr.arabic}</div>
-                <div className="relative text-[8rem] font-black tabular-nums leading-none text-white drop-shadow-2xl">{count}</div>
+              {/* Big counter */}
+              <div className="flex flex-col items-center mb-7">
+                <p className="text-2xl font-arabic text-sky-200/70 mb-1">{activeDhikr.arabic}</p>
+                <div className="text-[7rem] font-black tabular-nums leading-none text-white drop-shadow-[0_0_30px_rgba(125,211,252,0.2)]">
+                  {count}
+                </div>
+                <p className="text-[9px] uppercase tracking-[0.35em] font-black text-white/20 mt-1">× {activeDhikr.english}</p>
               </div>
 
-              <div className="w-full flex flex-col gap-6">
-                <Motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={incrementCount}
-                  className="w-full py-10 rounded-[2.5rem] bg-white text-black font-black text-6xl shadow-xl flex items-center justify-center"
-                >
-                  <Plus size={48} strokeWidth={3} />
-                </Motion.button>
-                <button onClick={resetCount} className="w-full py-3 rounded-2xl bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">Reset Counter</button>
-              </div>
+              {/* Tap button */}
+              <Motion.button
+                whileTap={{ scale: 0.94, boxShadow: "0 0 0 24px rgba(125,211,252,0)" }}
+                onClick={incrementCount}
+                className="w-full py-9 rounded-[2rem] bg-white text-black font-black text-5xl shadow-[0_8px_32px_rgba(255,255,255,0.15)] flex items-center justify-center mb-4 active:bg-sky-50 transition-colors"
+              >
+                <Plus size={44} strokeWidth={3} />
+              </Motion.button>
+
+              <button
+                onClick={resetCount}
+                className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.35em] text-white/25 hover:text-rose-400/80 transition-colors"
+              >Reset Counter</button>
             </Motion.div>
           </div>
         )}
@@ -753,17 +911,50 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
       <AnimatePresence>
         {showZakat && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/99 backdrop-blur-xl">
-            <Motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="w-full max-w-sm glass-card rounded-[3rem] p-10 relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" /><button onClick={() => setShowZakat(false)} className="absolute top-8 right-8 text-white/40"><X size={20} /></button>
-              <div className="text-center mb-8"><h3 className="text-xl font-black italic">ZAKAT <span className="text-amber-400">CALC</span></h3></div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><label className="text-[8px] font-black uppercase opacity-30 ml-2">Cash</label><input type="number" value={zakatInputs.cash} onChange={e => setZakatInputs({ ...zakatInputs, cash: e.target.value })} className="w-full p-4 rounded-2xl bg-white/5 text-white outline-none" /></div>
-                  <div className="space-y-1"><label className="text-[8px] font-black uppercase opacity-30 ml-2">Assets</label><input type="number" value={zakatInputs.gold} onChange={e => setZakatInputs({ ...zakatInputs, gold: e.target.value })} className="w-full p-4 rounded-2xl bg-white/5 text-white outline-none" /></div>
-                </div>
-                <button onClick={calculateZakat} className="w-full py-5 rounded-2xl bg-amber-500 text-black font-black uppercase text-xs">Calculate</button>
-                <div className="p-6 rounded-[2rem] bg-white/5 text-center"><p className="text-[10px] font-black text-slate-500 uppercase mb-1">Your Zakat Due</p><p className="text-3xl font-black text-amber-400">{zakatResult.toFixed(2)}</p></div>
+          <div className="modal-backdrop">
+            <Motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 26 }}
+              className="w-full max-w-sm glass-card rounded-[2.8rem] p-8 relative overflow-hidden shadow-2xl"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]" />
+              <button onClick={() => setShowZakat(false)} className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all">
+                <X size={16} />
+              </button>
+
+              <p className="text-[9px] font-black tracking-[.45em] uppercase text-white/30 mb-1 mt-2">Calculator</p>
+              <h3 className="text-lg font-black mb-6">ZAKAT <span className="text-amber-400">DUE</span></h3>
+
+              <div className="space-y-3 mb-5">
+                {[
+                  { key: "cash", label: "Cash & Bank", placeholder: "0" },
+                  { key: "gold", label: "Gold & Silver", placeholder: "0" },
+                  { key: "investments", label: "Investments", placeholder: "0" },
+                  { key: "debts", label: "Debts (deduct)", placeholder: "0" },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-[8px] font-black uppercase tracking-[0.25em] text-white/30 mb-1.5 ml-1">{label}</label>
+                    <input
+                      type="number"
+                      placeholder={placeholder}
+                      value={zakatInputs[key]}
+                      onChange={e => setZakatInputs(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={calculateZakat}
+                className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-[10px] transition-colors shadow-[0_4px_20px_rgba(245,158,11,0.3)] mb-4"
+              >Calculate Zakat</button>
+
+              <div className="p-5 rounded-2xl bg-amber-500/8 border border-amber-500/20 text-center">
+                <p className="text-[8px] font-black text-amber-400/60 uppercase tracking-widest mb-1">Your Zakat Due (2.5%)</p>
+                <p className="text-4xl font-black text-amber-400 tabular-nums">{zakatResult.toFixed(2)}</p>
               </div>
             </Motion.div>
           </div>
@@ -859,26 +1050,57 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 function RamadanCalendar({ data, loading, onRetry, errorMessage }) {
   if (loading) return null;
   if (!data) return (
-    <div className="p-8 text-center"><p className="text-white/60 mb-4">{errorMessage || "Schedule unavailable"}</p>
-      <button onClick={onRetry} className="px-4 py-2 bg-white/10 rounded-xl text-white text-xs font-bold uppercase tracking-wider">Retry</button></div>
+    <div className="p-10 text-center">
+      <p className="text-white/50 mb-5 text-sm">{errorMessage || "Schedule unavailable"}</p>
+      <button onClick={onRetry} className="px-6 py-3 bg-white/10 hover:bg-white/15 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest transition-colors">Retry</button>
+    </div>
   );
-
+  const today = getTodayString();
   return (
-    <div className="p-6 w-full max-w-4xl mx-auto pb-32">
-      <div className="flex items-center gap-4 mb-8 shrink-0">
-        <Link to="/" className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-colors"><ChevronLeft size={20} /></Link>
-        <div><h1 className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase italic">RAMADAN <span className="text-sky-300">SCHEDULE</span></h1><p className="text-[10px] font-black tracking-widest text-white/30 truncate">MONTHLY PRAYER TIMINGS {data.ramadan_year}</p></div>
+    <div className="px-5 pt-5 w-full max-w-4xl mx-auto pb-16">
+      <div className="flex items-center gap-3 mb-7">
+        <Link to="/" className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-colors border border-white/5 hover:border-white/10">
+          <ChevronLeft size={18} />
+        </Link>
+        <div>
+          <h1 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase">RAMADAN <span className="text-sky-300">SCHEDULE</span></h1>
+          <p className="text-[9px] font-black tracking-widest text-white/25 uppercase">Monthly Timings · {data.ramadan_year}</p>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {data.fasting.map((day, i) => (
-          <div key={i} className={`p-6 rounded-[2rem] glass-card border-white/5 flex flex-col gap-4 ${getTodayString() === day.date ? 'ring-2 ring-sky-500/50 bg-sky-500/5' : ''}`}>
-            <div className="flex justify-between items-start"><div className="flex flex-col"><span className="text-[10px] font-black uppercase tracking-widest text-sky-400">Day {day.day}</span><span className="text-lg font-black text-white">{day.date_hijri}</span></div><div className="p-2 rounded-xl bg-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{day.date}</div></div>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/5"><p className="text-[8px] font-black uppercase text-slate-500 mb-1">SUHOOR</p><p className="text-xl font-black text-white">{formatTo12Hour(day.time.sahur)}</p></div>
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/5"><p className="text-[8px] font-black uppercase text-slate-500 mb-1">IFTAR</p><p className="text-xl font-black text-emerald-400">{formatTo12Hour(day.time.iftar)}</p></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {data.fasting.map((day, i) => {
+          const isToday = today === day.date;
+          return (
+            <div
+              key={i}
+              className={`p-5 rounded-[1.75rem] glass-card flex flex-col gap-3 transition-all duration-300 ${isToday ? 'border-sky-500/40 shadow-[0_0_24px_rgba(125,211,252,0.1)] bg-sky-500/[0.06]' : 'border-white/[0.05]'
+                }`}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-sky-400">Day {day.day}</span>
+                    {isToday && (
+                      <span className="text-[7px] font-black uppercase tracking-widest bg-sky-500 text-black px-1.5 py-0.5 rounded-full">Today</span>
+                    )}
+                  </div>
+                  <span className="text-base font-black text-white">{day.date_hijri}</span>
+                </div>
+                <span className="text-[9px] font-bold text-white/30 bg-white/5 px-2.5 py-1 rounded-xl">{day.date}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+                  <p className="text-[7px] font-black uppercase text-white/30 tracking-widest mb-1">SUHOOR</p>
+                  <p className="text-lg font-black text-white">{formatTo12Hour(day.time.sahur)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/15">
+                  <p className="text-[7px] font-black uppercase text-emerald-400/60 tracking-widest mb-1">IFTAR</p>
+                  <p className="text-lg font-black text-emerald-400">{formatTo12Hour(day.time.iftar)}</p>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -987,24 +1209,51 @@ function App() {
 
   useEffect(() => { fetchRamadanData(); }, [fetchRamadanData]);
 
+  // Automatic reload on permission grant
+  useEffect(() => {
+    if (!navigator.permissions || !navigator.permissions.query) return;
+
+    let permissionStatus;
+    const handlePermissionChange = (e) => {
+      if (e.target.state === "granted") {
+        fetchRamadanData();
+      }
+    };
+
+    navigator.permissions.query({ name: "geolocation" }).then((status) => {
+      permissionStatus = status;
+      status.addEventListener("change", handlePermissionChange);
+    });
+
+    return () => {
+      if (permissionStatus) {
+        permissionStatus.removeEventListener("change", handlePermissionChange);
+      }
+    };
+  }, [fetchRamadanData]);
+
   if (locationPermissionDenied) {
     return (
       <div className="h-screen w-full bg-black text-white flex items-center justify-center px-6">
-        <div className="w-full max-w-md rounded-[2rem] border border-white/15 bg-white/5 backdrop-blur-xl p-8 text-center">
-          <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-rose-400">
-            <MapPin size={24} />
+        <Motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm glass-card rounded-[2.5rem] p-10 text-center"
+        >
+          <div className="mx-auto mb-6 w-16 h-16 flex items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-500/10 text-rose-400">
+            <MapPin size={26} />
           </div>
-          <h1 className="text-xl font-black uppercase tracking-wide mb-3">Location Permission Required</h1>
-          <p className="text-sm text-slate-300 mb-6">
-            {error || "This app needs your location to load accurate timings. Please allow location access."}
+          <h1 className="text-xl font-black uppercase tracking-wide mb-3 text-white">Location Required</h1>
+          <p className="text-sm text-white/50 leading-relaxed mb-8">
+            {error || "Please allow location access so we can load accurate Sehri & Iftar timings for your city."}
           </p>
           <button
             onClick={fetchRamadanData}
-            className="w-full py-3 rounded-xl bg-white text-black font-black uppercase tracking-wider text-xs"
+            className="w-full py-4 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[10px] hover:bg-sky-50 transition-colors"
           >
             Allow Location
           </button>
-        </div>
+        </Motion.div>
       </div>
     );
   }
