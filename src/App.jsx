@@ -436,6 +436,34 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
   const [showQuran, setShowQuran] = useState(false);
   const [showCharity, setShowCharity] = useState(false);
   const [showQadr, setShowQadr] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setInstallPrompt(null);
+  };
 
   const dailyHadiths = [
     { text: "The best among you are those who have the best manners and character.", source: "Sahih Bukhari" },
@@ -610,6 +638,46 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </Link>
           </div>
         </div>
+
+        {/* --- PWA Status & Install Promo --- */}
+        <AnimatePresence>
+          {!isOnline && (
+            <Motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="w-full mb-4"
+            >
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 flex items-center justify-center gap-2 text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                <AlertCircle size={14} /> Offline Mode: Using Cached Data
+              </div>
+            </Motion.div>
+          )}
+
+          {installPrompt && (
+            <Motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full mb-6"
+            >
+              <div className="glass-card rounded-3xl p-5 border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
+                    <img src="/icons/icon-192.png" alt="App Icon" className="h-8 w-8 rounded-lg" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h5 className="text-xs font-black text-[var(--text-main)] uppercase tracking-tight">Install Ramadan Journey</h5>
+                    <p className="text-[10px] text-[var(--text-muted)] font-medium">Add to home screen for faster access and offline use.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setInstallPrompt(null)} className="px-4 py-2 text-[10px] font-black uppercase text-[var(--text-dim)]">Later</button>
+                  <button onClick={handleInstall} className="bg-sky-500 hover:bg-sky-400 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-sky-500/20 transition-all">Install Now</button>
+                </div>
+              </div>
+            </Motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="w-full flex flex-col items-center gap-4">
           {/* ── Countdown Card ── */}

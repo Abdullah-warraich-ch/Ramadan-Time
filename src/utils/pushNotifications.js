@@ -59,3 +59,18 @@ export async function scheduleNotification({ userId, title, body, scheduleAt, da
 
   return res.json();
 }
+
+export async function sendTestNotification({ userId }) {
+  const res = await fetch(`${API_BASE}/api/push/test`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Failed to send test notification");
+  }
+
+  return res.json();
+}

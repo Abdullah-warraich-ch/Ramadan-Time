@@ -10,8 +10,8 @@ cleanupOutdatedCaches();
 
 self.addEventListener("push", (event) => {
   let payload = {
-    title: "Ramadan Reminder",
-    body: "Time update is ready.",
+    title: "Ramadan Journey",
+    body: "Time for a blessed moment.",
     url: "/",
   };
 
@@ -23,26 +23,50 @@ self.addEventListener("push", (event) => {
     }
   }
 
+  const options = {
+    body: payload.body,
+    icon: "/icons/icon-512.png",
+    badge: "/icons/icon-192.png",
+    vibrate: [100, 50, 100],
+    data: { url: payload.url || "/", ...payload.data },
+    actions: [
+      { action: "open", title: "Open App" },
+      { action: "close", title: "Dismiss" }
+    ],
+    tag: payload.kind || "ramadan-alert",
+    renotify: true,
+    silent: false
+  };
+
+  // Special handling for kind
+  if (payload.kind === "sehri") {
+    options.vibrate = [200, 100, 200, 100, 200];
+  } else if (payload.kind === "iftar") {
+    options.vibrate = [500, 100, 500];
+  }
+
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      data: { url: payload.url || "/", ...payload.data },
-    })
+    self.registration.showNotification(payload.title, options)
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  if (event.action === "close") {
+    return;
+  }
+
   const targetUrl = event.notification?.data?.url || "/";
 
   event.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
+        // Find existing client or open new one
         for (const client of clients) {
-          if (client.url.includes(targetUrl) && "focus" in client) {
+          const clientUrl = new URL(client.url).pathname;
+          if (clientUrl === targetUrl && "focus" in client) {
             return client.focus();
           }
         }

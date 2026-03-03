@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { X, Bell, BellOff, CheckCircle2, AlertCircle, Settings2, Info, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { scheduleNotification, subscribeUser } from "../../utils/pushNotifications";
+import { scheduleNotification, sendTestNotification, subscribeUser } from "../../utils/pushNotifications";
 import { getTodayString, parseTime } from "../../utils/time";
 
 const REMINDER_MINUTES = [60, 30, 15, 5, 0];
@@ -64,10 +64,19 @@ export default function PushSchedulerPanel({ data, cityName }) {
   );
 
   const [status, setStatus] = useState("idle");
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("push_user_id", userId);
   }, [userId]);
+
+  const ensureSubscribed = useCallback(async () => {
+    if (permission !== "granted") {
+      throw new Error("Notification permission not granted");
+    }
+    await subscribeUser(userId);
+    setIsSubscribed(true);
+  }, [permission, userId]);
 
   // Handle auto-expansion or hiding based on permission
   useEffect(() => {
@@ -80,6 +89,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
   const scheduleApiNotifications = useCallback(async (auto = false) => {
     try {
       if (permission !== "granted") return;
+      await ensureSubscribed();
 
       const now = new Date();
       const upcomingEvents = getUpcomingEvents(data, now);
@@ -114,14 +124,17 @@ export default function PushSchedulerPanel({ data, cityName }) {
       console.error("Scheduling failed:", error);
       setStatus(`error:${error.message}`);
     }
-  }, [permission, data, cityName, userId]);
+  }, [permission, data, cityName, userId, ensureSubscribed]);
 
   useEffect(() => {
     if (permission !== "granted" || !data?.fasting?.length) return;
     const scheduleKey = `push_schedule_${getTodayString()}`;
-    if (localStorage.getItem(scheduleKey) === "1") return;
+    if (localStorage.getItem(scheduleKey) === "1") {
+      ensureSubscribed().catch((error) => setStatus(`error:${error.message}`));
+      return;
+    }
     scheduleApiNotifications(true);
-  }, [permission, data, scheduleApiNotifications]);
+  }, [permission, data, scheduleApiNotifications, ensureSubscribed]);
 
   const requestPermissionAndSubscribe = async () => {
     try {
@@ -132,7 +145,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
       const result = await Notification.requestPermission();
       setPermission(result);
       if (result === "granted") {
-        await subscribeUser(userId);
+        await ensureSubscribed();
         await scheduleApiNotifications(true);
         setStage("success");
         setTimeout(() => setStage("collapsed"), 4000);
@@ -148,17 +161,12 @@ export default function PushSchedulerPanel({ data, cityName }) {
   const handleTestNotification = async () => {
     try {
       setStatus("testing");
-      await scheduleNotification({
-        userId,
-        title: "Test Alert 🌙",
-        body: "Your Ramadan notifications are working perfectly!",
-        scheduleAt: new Date(Date.now() + 5000).toISOString(),
-        data: { url: "/", kind: "info" },
-      });
+      await ensureSubscribed();
+      await sendTestNotification({ userId });
       setStatus("test-sent");
       setTimeout(() => setStatus("idle"), 3000);
     } catch (e) {
-      setStatus("test-failed");
+      setStatus(`error:${e?.message || "test-failed"}`);
     }
   };
 
@@ -254,7 +262,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
                   <CheckCircle2 size={14} className="text-emerald-400" />
                   <span className="text-[10px] font-bold text-[var(--text-main)]">Status</span>
                 </div>
-                <span className="text-[9px] font-black uppercase text-emerald-400">Active</span>
+                <span className="text-[9px] font-black uppercase text-emerald-400">{isSubscribed ? "Active" : "Connecting"}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-glass)]">
@@ -278,7 +286,7 @@ export default function PushSchedulerPanel({ data, cityName }) {
                 onClick={handleTestNotification}
                 className="group rounded-xl bg-white/5 py-2.5 text-[9px] font-black uppercase tracking-wider text-sky-400 border border-sky-500/20 hover:bg-sky-500/10 transition-colors"
               >
-                {status === "test-sent" ? "Sent!" : "Test Tip"}
+                {status === "test-sent" ? "Sent!" : "Test Ping"}
               </button>
             </div>
 

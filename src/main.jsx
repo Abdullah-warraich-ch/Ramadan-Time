@@ -5,8 +5,25 @@ import App from './App.jsx'
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch(() => {
-      // Keep app running even if SW registration fails.
+    // Register the SW managed by vite-plugin-pwa
+    navigator.serviceWorker.register("/sw.js").then((registration) => {
+      console.log("SW registered:", registration.scope);
+      // Optional: Handle updates
+      registration.onupdatefound = () => {
+        const installingWorker = registration.installing;
+        if (installingWorker) {
+          installingWorker.onstatechange = () => {
+            if (installingWorker.state === "installed") {
+              if (navigator.serviceWorker.controller) {
+                // New content is available; please refresh.
+                console.log("New content available, please refresh.");
+              }
+            }
+          };
+        }
+      };
+    }).catch((error) => {
+      console.error("SW registration failed:", error);
     });
   });
 }
