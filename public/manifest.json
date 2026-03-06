@@ -1,12 +1,12 @@
 {
-  "name": "Ramadan Journey - Live Tracker & Alerts",
+  "name": "Ramadan Journey - Live Tracker",
   "short_name": "Ramadan Journey",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#020617",
   "theme_color": "#020617",
-  "description": "Daily Ramadan tracker with live countdowns, Sehri/Iftar alerts, and spiritual hub.",
+  "description": "Daily Ramadan tracker with live countdowns, Sehri/Iftar timings, and spiritual hub.",
   "icons": [
     {
       "src": "/icons/icon-192.png",

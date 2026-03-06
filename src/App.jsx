@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles, Moon } from "lucide-react";
+import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, Download, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles, Moon } from "lucide-react";
 import { getTodayString, formatTo12Hour } from "./utils/time";
 import { allahNames } from "./data/names";
-import PushSchedulerPanel from "./components/pwa/PushSchedulerPanel";
 import { getCountdownSnapshot } from "./utils/countdown";
 
 const CACHE_KEY = "ramadan_schedule_cache_v1";
@@ -608,7 +607,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
                 onClick={handleInstall}
                 className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-lg shadow-emerald-500/5"
               >
-                <Plus size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+                <Download size={14} />
                 <span className="hidden xs:inline">Install</span>
               </button>
             )}
@@ -1362,11 +1361,9 @@ function App() {
           <div className={`absolute inset-0 transition-opacity duration-1000 pointer-events-none ${theme === "light" ? "opacity-100" : "opacity-0"}`}>
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,_#e0f2fe_0%,_transparent_50%),radial-gradient(circle_at_80%_80%,_#f5f3ff_0%,_transparent_50%)]" />
           </div>
-          <div className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_${theme === "dark" ? "#1e293b" : "#f1f5f9"}_0%,_transparent_100%)] opacity-30`} />
+        <div className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_${theme === "dark" ? "#1e293b" : "#f1f5f9"}_0%,_transparent_100%)] opacity-30`} />
         </div>
         <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
-          <PushSchedulerPanel data={data} cityName={cityName} />
-
           <AnimatePresence>
             {showInstallModal && !locationPermissionDenied && (
               <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/40 backdrop-blur-md">
@@ -1389,7 +1386,7 @@ function App() {
                     <p className="text-[10px] font-black tracking-[.4em] uppercase text-sky-400 mb-2">PWA INSTALL</p>
                     <h3 className="text-2xl font-black text-[var(--text-main)] italic">RAMADAN <span className="text-sky-400">JOURNEY</span></h3>
                     <p className="text-xs text-[var(--text-muted)] font-medium mt-3 leading-relaxed">
-                      Install our app for a faster experience, offline access to timings, and instant notifications.
+                      Install our app for a faster experience and offline access to timings.
                     </p>
                   </div>
 

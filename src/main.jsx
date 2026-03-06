@@ -4,27 +4,18 @@ import './index.css'
 import App from './App.jsx'
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    // Register the SW managed by vite-plugin-pwa
-    navigator.serviceWorker.register("/sw.js").then((registration) => {
-      console.log("SW registered:", registration.scope);
-      // Optional: Handle updates
-      registration.onupdatefound = () => {
-        const installingWorker = registration.installing;
-        if (installingWorker) {
-          installingWorker.onstatechange = () => {
-            if (installingWorker.state === "installed") {
-              if (navigator.serviceWorker.controller) {
-                // New content is available; please refresh.
-                console.log("New content available, please refresh.");
-              }
-            }
-          };
-        }
-      };
-    }).catch((error) => {
+  window.addEventListener("load", async () => {
+    try {
+      const probe = await fetch("/sw.js", { method: "HEAD", cache: "no-store" });
+      const contentType = (probe.headers.get("content-type") || "").toLowerCase();
+      if (!probe.ok || contentType.includes("text/html")) {
+        console.warn("SW not available at /sw.js. Skipping registration.");
+        return;
+      }
+      await navigator.serviceWorker.register("/sw.js");
+    } catch (error) {
       console.error("SW registration failed:", error);
-    });
+    }
   });
 }
 
