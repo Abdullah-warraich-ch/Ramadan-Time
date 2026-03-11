@@ -346,47 +346,59 @@ function RamadanProgressRing({ currentDay, hijriReadable }) {
       transition={{ delay: 0.1 }}
       className="w-full max-w-2xl px-1 mt-4"
     >
-      <div className="glass-card rounded-[2rem] p-6 flex items-center justify-between border-white/5 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-transparent pointer-events-none" />
+      <div className="glass-card rounded-[2rem] p-6 md:p-8 flex items-center justify-between border-white/5 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/6 via-transparent to-emerald-500/4 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
         <div className="z-10">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-sky-400/80 mb-1.5 flex items-center gap-1.5">
+          <p className="text-[9px] font-black uppercase tracking-[0.35em] text-sky-400/80 mb-2 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]" />
             Ramadan Journey
           </p>
-          <h4 className="text-xl font-black text-[var(--text-main)] italic">
-            DAY <span className="text-sky-400">{safeDay}</span> <span className="text-[var(--text-dim)] font-light">/ 30</span>
+          <h4 className="text-2xl md:text-3xl font-black text-[var(--text-main)] italic leading-none mb-1">
+            DAY <span className="text-sky-400">{safeDay}</span> <span className="text-[var(--text-dim)] font-light text-xl">/ 30</span>
           </h4>
-          <p className="text-[10px] text-[var(--text-dim)] font-bold mt-1">Today is {todayHijriLabel}</p>
+          <p className="text-[10px] text-[var(--text-dim)] font-bold mt-2">{todayHijriLabel}</p>
           <p className="text-[10px] text-[var(--text-muted)] font-medium mt-1">
-            {safeDay >= 30 ? "Ramadan Complete! Eid Mubarak!" : `${30 - safeDay} days remaining in this blessed month`}
+            {safeDay >= 30 ? "🎉 Ramadan Complete! Eid Mubarak!" : `${30 - safeDay} days remaining`}
           </p>
         </div>
 
-        <div className="relative w-20 h-20 shrink-0">
+        <div className="relative w-24 h-24 shrink-0">
+          {/* Outer glow ring */}
+          <div className="absolute inset-0 rounded-full blur-md bg-sky-500/10 scale-110" />
           <svg className="w-full h-full" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#38bdf8" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+            </defs>
             <circle
-              className="text-[var(--surface-glass-hover)] stroke-current"
-              strokeWidth="8"
+              className="stroke-current text-white/5"
+              strokeWidth="7"
               fill="transparent"
               r="45"
               cx="50"
               cy="50"
             />
             <circle
-              className="text-sky-400 stroke-current ring-progress"
-              strokeWidth="8"
+              stroke="url(#ringGradient)"
+              strokeWidth="7"
               strokeLinecap="round"
               fill="transparent"
               r="45"
               cx="50"
               cy="50"
+              className="ring-progress"
               style={{
                 strokeDasharray: circumference,
                 strokeDashoffset: offset,
+                filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))"
               }}
             />
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-[var(--text-main)]/80">
-            {Math.round(percentage)}%
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[11px] font-black text-[var(--text-main)]">{Math.round(percentage)}%</span>
           </div>
         </div>
       </div>
@@ -396,34 +408,46 @@ function RamadanProgressRing({ currentDay, hijriReadable }) {
 
 function CountdownSeparator() {
   return (
-    <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-thin text-[var(--text-dim)] select-none shrink-0 pb-4">:</div>
+    <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-thin text-sky-400/20 select-none shrink-0 pb-4">:</div>
   );
 }
 
 function TimingTile({ icon, label, time, active, theme }) {
+  const isIftar = label === "IFTAR";
   return (
     <div className={`group p-4 sm:p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border transition-all duration-700 relative overflow-hidden flex flex-col items-center justify-center ${active
-      ? 'bg-[var(--surface-glass-hover)] border-sky-500/30 shadow-[0_20px_40px_rgba(56,189,248,0.15)] ring-1 ring-sky-500/20'
-      : 'bg-[var(--surface-glass)] border-[var(--border-glass)] opacity-60 hover:opacity-100 hover:bg-[var(--surface-glass-hover)] hover:scale-[1.02]'
+      ? isIftar
+        ? 'bg-emerald-500/10 border-emerald-500/30 shadow-[0_20px_40px_rgba(16,185,129,0.18)] ring-1 ring-emerald-500/20'
+        : 'bg-sky-500/10 border-sky-500/30 shadow-[0_20px_40px_rgba(56,189,248,0.18)] ring-1 ring-sky-500/20'
+      : 'bg-[var(--surface-glass)] border-[var(--border-glass)] opacity-55 hover:opacity-100 hover:bg-[var(--surface-glass-hover)] hover:scale-[1.02]'
       }`}>
       {active && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-400/10 via-transparent to-emerald-400/5 pointer-events-none" />
+          <div className={`absolute inset-0 pointer-events-none ${isIftar
+            ? 'bg-gradient-to-br from-emerald-400/8 via-transparent to-emerald-400/3'
+            : 'bg-gradient-to-br from-sky-400/8 via-transparent to-sky-400/3'
+            }`} />
           <span className="absolute top-4 right-4 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-50" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${isIftar ? 'bg-emerald-400' : 'bg-sky-400'}`} />
+            <span className={`relative inline-flex rounded-full h-2 w-2 shadow-[0_0_8px_rgba(56,189,248,0.8)] ${isIftar ? 'bg-emerald-400' : 'bg-sky-400'}`} />
           </span>
         </>
       )}
       <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center rounded-2xl mb-3 sm:mb-4 md:mb-5 transition-all duration-500 group-hover:scale-110 ${active
-        ? theme === 'light' ? 'bg-sky-500 text-white shadow-xl shadow-sky-500/40' : 'bg-sky-400 text-slate-950 shadow-xl shadow-sky-400/20'
+        ? isIftar
+          ? theme === 'light' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/40' : 'bg-emerald-400 text-slate-950 shadow-xl shadow-emerald-400/30'
+          : theme === 'light' ? 'bg-sky-500 text-white shadow-xl shadow-sky-500/40' : 'bg-sky-400 text-slate-950 shadow-xl shadow-sky-400/30'
         : 'bg-white/5 text-[var(--text-dim)]'
         }`}>
         {safeClone(icon, { size: active ? 20 : 18 })}
       </div>
-      <p className={`text-[8px] sm:text-[10px] md:text-[11px] font-black tracking-[.25em] uppercase mb-1.5 sm:mb-2 ${active ? theme === 'light' ? 'text-sky-600' : 'text-sky-400' : 'text-[var(--text-dim)]'
+      <p className={`text-[8px] sm:text-[10px] md:text-[11px] font-black tracking-[.28em] uppercase mb-1.5 sm:mb-2 ${active
+        ? isIftar
+          ? theme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
+          : theme === 'light' ? 'text-sky-600' : 'text-sky-400'
+        : 'text-[var(--text-dim)]'
         }`}>{label}</p>
-      <p className={`text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter ${active ? 'text-[var(--text-main)]' : 'text-[var(--text-dim)]'
+      <p className={`text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter ${active ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'
         }`}>{time}</p>
     </div>
   );
@@ -681,36 +705,39 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
           <Motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full glass-card rounded-[2.5rem] p-6 md:p-10 flex flex-col items-center border-white/10 shadow-2xl relative overflow-hidden"
+            className="w-full glass-card-hero rounded-[2.5rem] p-6 md:p-12 flex flex-col items-center relative overflow-hidden"
           >
-            {/* ambient glows */}
-            <div className="absolute -top-28 -left-28 w-72 h-72 bg-sky-500/10 rounded-full blur-[110px] pointer-events-none" />
-            <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-emerald-500/7 rounded-full blur-[90px] pointer-events-none" />
+            {/* Dramatic ambient glows */}
+            <div className="absolute -top-32 -left-32 w-80 h-80 bg-sky-500/15 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-emerald-500/12 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-violet-500/5 rounded-full blur-[80px] pointer-events-none" />
 
             {/* Progress bar */}
-            <div className="w-full max-w-lg mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[var(--text-dim)]">Day Progress</span>
-                <span className="text-[10px] font-black tabular-nums text-[var(--text-muted)]">{Math.round(timeProgress)}%</span>
+            <div className="w-full max-w-lg mb-7">
+              <div className="flex justify-between items-center mb-2.5">
+                <span className="text-[9px] uppercase tracking-[0.45em] font-black text-sky-400/60">Day Progress</span>
+                <span className="text-[10px] font-black tabular-nums text-sky-400/80">{Math.round(timeProgress)}%</span>
               </div>
-              <div className="h-[5px] rounded-full bg-[var(--surface-glass)] overflow-hidden border border-[var(--border-glass)]">
+              <div className="h-[6px] rounded-full bg-white/5 overflow-hidden">
                 <Motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400 shadow-[0_0_12px_rgba(125,211,252,0.4)]"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400 shadow-[0_0_16px_rgba(56,189,248,0.5)]"
                   animate={{ width: `${timeProgress}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               </div>
             </div>
 
             {/* Status label */}
-            <div className="flex items-center gap-2 mb-5">
-              <span className={`text-[9px] font-black tracking-[0.5em] uppercase ${theme === 'light' ? 'text-sky-600' : 'text-sky-300/50'}`}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-10 bg-gradient-to-r from-transparent to-sky-400/40" />
+              <span className={`text-[10px] font-black tracking-[0.55em] uppercase ${theme === 'light' ? 'text-sky-600' : 'text-sky-400/70'}`}>
                 {currentStatus === "iftar" ? "⬇ Until Iftar" : "⬆ Until Sahur"}
               </span>
+              <div className="h-px w-10 bg-gradient-to-l from-transparent to-sky-400/40" />
             </div>
 
             {/* Digits */}
-            <div className="flex items-center justify-center gap-3 md:gap-6 mb-8">
+            <div className="flex items-center justify-center gap-3 md:gap-8 mb-10">
               <CountdownBlock value={timeLeft.h} label="Hrs" theme={theme} />
               <CountdownSeparator />
               <CountdownBlock value={timeLeft.m} label="Min" theme={theme} />
@@ -729,31 +756,32 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
           <RamadanProgressRing currentDay={todayData?.day} hijriReadable={todayData?.hijri_readable} />
 
           {/* ── Daily Inspiration ── */}
-          <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="w-full max-w-2xl px-1 mt-3">
-            <div className="p-5 rounded-[2rem] bg-gradient-to-br from-sky-500/10 to-indigo-500/5 border border-[var(--border-glass)] backdrop-blur-md relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-8 group-hover:opacity-15 transition-opacity duration-500 pointer-events-none">
-                <Sparkles size={36} className="text-sky-300" />
+          <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="w-full max-w-2xl px-1 mt-2">
+            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-sky-500/10 via-indigo-500/5 to-violet-500/8 border border-sky-500/15 backdrop-blur-md relative overflow-hidden group">
+              <div className="absolute -top-6 -right-6 opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none">
+                <Sparkles size={72} className="text-sky-300" />
               </div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-sky-400/80 mb-2.5 flex items-center gap-1.5">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+              <p className="text-[9px] font-black uppercase tracking-[0.35em] text-sky-400/90 mb-3 flex items-center gap-2">
                 <Sparkles size={11} /> Daily Inspiration
               </p>
-              <p className="text-sm font-medium italic text-[var(--text-main)]/80 leading-relaxed mb-3">&ldquo;{inspiration.text}&rdquo;</p>
+              <p className="text-sm md:text-base font-medium italic text-[var(--text-main)] leading-relaxed mb-4 opacity-90">&ldquo;{inspiration.text}&rdquo;</p>
               <div className="flex justify-between items-center">
                 <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-dim)]">&mdash; {inspiration.source}</span>
                 <button
                   onClick={() => { navigator.clipboard.writeText(`"${inspiration.text}" — ${inspiration.source}`); }}
-                  className="text-[8px] font-black uppercase tracking-widest text-sky-500/60 hover:text-sky-400 transition-colors"
+                  className="text-[8px] font-black uppercase tracking-widest text-sky-500/60 hover:text-sky-400 transition-colors px-3 py-1 rounded-lg hover:bg-sky-500/10"
                 >Copy</button>
               </div>
             </div>
           </Motion.div>
 
           {/* ── Spiritual Hub ── */}
-          <div className="w-full max-w-2xl px-1 mt-7 mb-4">
-            <div className="flex items-center gap-4 mb-5">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--border-glass)]" />
-              <h3 className="text-[9px] font-black uppercase tracking-[0.45em] text-[var(--text-dim)]">Spiritual Hub</h3>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--border-glass)]" />
+          <div className="w-full max-w-2xl px-1 mt-8 mb-4">
+            <div className="flex items-center gap-4 mb-6">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--border-glass)] to-transparent" />
+              <h3 className="text-[9px] font-black uppercase tracking-[0.5em] text-[var(--text-dim)]">Spiritual Hub</h3>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--border-glass)] to-transparent" />
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <ToolkitItem color="amber" icon={<Info />} label="99 Names" onClick={() => setShowNames(true)} theme={theme} />

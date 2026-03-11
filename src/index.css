@@ -2,19 +2,22 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark Theme (Default) - Deep & Premium */
+  /* Dark Theme — Ultra-Premium Deep Space */
   --bg-app: #020617;
-  --bg-gradient: radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0, transparent 50%),
-                 radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.1) 0, transparent 50%),
-                 radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.1) 0, transparent 50%);
-  --text-main: #f8fafc;
+  --bg-gradient:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(56, 189, 248, 0.12) 0, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 100% 0%, rgba(139, 92, 246, 0.12) 0, transparent 60%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(16, 185, 129, 0.08) 0, transparent 60%);
+  --text-main: #f0f9ff;
   --text-muted: #94a3b8;
   --text-dim: #475569;
-  --surface-glass: rgba(15, 23, 42, 0.6);
-  --surface-glass-hover: rgba(30, 41, 59, 0.8);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-hover: rgba(255, 255, 255, 0.15);
-  --shadow-card: 0 20px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  /* Richer glass surfaces */
+  --surface-glass: rgba(8, 18, 40, 0.65);
+  --surface-glass-hover: rgba(15, 30, 60, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.07);
+  --border-glass-hover: rgba(56, 189, 248, 0.25);
+  --shadow-card: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255,255,255,0.05);
 
   --accent-blue: #38bdf8;
   --accent-blue-deep: #0ea5e9;
@@ -22,24 +25,25 @@
   --accent-violet: #8b5cf6;
   --radius-card: 2.5rem;
   --radius-pill: 9999px;
-  --shadow-glow-blue: 0 0 40px rgba(56, 189, 248, 0.15);
-  --shadow-glow-emerald: 0 0 40px rgba(16, 185, 129, 0.12);
+  --shadow-glow-blue: 0 0 60px rgba(56, 189, 248, 0.2);
+  --shadow-glow-emerald: 0 0 60px rgba(16, 185, 129, 0.18);
 }
 
 body.light {
-  /* Premium Soft Light Theme - Airy & Clean */
-  --bg-app: #f1f5f9;
-  --bg-gradient: radial-gradient(at 0% 0%, rgba(186, 230, 253, 0.3) 0, transparent 50%),
-                 radial-gradient(at 100% 0%, rgba(221, 214, 254, 0.3) 0, transparent 50%),
-                 radial-gradient(at 50% 100%, rgba(255, 255, 255, 0.5) 0, transparent 50%);
-  --text-main: #0f172a;
+  /* Premium Soft Light Theme */
+  --bg-app: #f0f4f8;
+  --bg-gradient:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(186, 230, 253, 0.45) 0, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 100% 0%, rgba(221, 214, 254, 0.35) 0, transparent 60%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(167, 243, 208, 0.25) 0, transparent 60%);
+  --text-main: #0d1b2a;
   --text-muted: #334155;
   --text-dim: #64748b;
-  --surface-glass: rgba(255, 255, 255, 0.7);
-  --surface-glass-hover: rgba(255, 255, 255, 0.9);
-  --border-glass: rgba(148, 163, 184, 0.2);
-  --border-glass-hover: rgba(12, 74, 110, 0.15);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-glass-hover: rgba(255, 255, 255, 0.95);
+  --border-glass: rgba(148, 163, 184, 0.22);
+  --border-glass-hover: rgba(14, 165, 233, 0.2);
+  --shadow-card: 0 10px 40px -8px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
   --shadow-glow-blue: 0 0 40px rgba(125, 211, 252, 0.25);
 }
 
@@ -81,36 +85,49 @@ body {
 /* ─── Glass Card ────────────────────────────────── */
 .glass-card {
   background: var(--surface-glass);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
   border: 1px solid var(--border-glass);
   box-shadow: var(--shadow-card);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prominent hero version of glass card */
+.glass-card-hero {
+  background: linear-gradient(135deg, rgba(10, 20, 50, 0.75) 0%, rgba(5, 15, 35, 0.85) 100%);
+  backdrop-filter: blur(32px) saturate(220%);
+  -webkit-backdrop-filter: blur(32px) saturate(220%);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 80px -20px rgba(56, 189, 248, 0.08);
 }
 
 .glass-card:hover {
   background: var(--surface-glass-hover);
   border-color: var(--border-glass-hover);
   transform: translateY(-2px);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(56,189,248,0.08);
 }
 
 .decorative-glow {
   position: fixed;
-  width: 50vw;
-  height: 50vw;
+  width: 55vw;
+  height: 55vw;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
+  filter: blur(130px);
+  opacity: 0.18;
   pointer-events: none;
   z-index: -1;
-  animation: drift 20s ease-in-out infinite;
+  animation: drift 22s ease-in-out infinite;
 }
 
 @keyframes drift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(10%, 10%) rotate(10deg); }
-  66% { transform: translate(-10%, 5%) rotate(-10deg); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8%, 12%) scale(1.05); }
+  66% { transform: translate(-8%, 4%) scale(0.95); }
 }
 
 /* ─── Text Gradients ────────────────────────────── */
@@ -313,53 +330,75 @@ body {
 .calendar-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 0.75rem;
+  border-spacing: 0 0.6rem;
+}
+
+.calendar-table thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .calendar-table th {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   text-align: left;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.65rem;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
+  letter-spacing: 0.22em;
+  color: rgba(56, 189, 248, 0.7);
+  background: rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
 }
 
 .calendar-table td {
-  padding: 1.25rem 1.5rem;
-  background: var(--surface-glass);
-  border-top: 1px solid var(--border-glass);
-  border-bottom: 1px solid var(--border-glass);
-  transition: all 0.3s ease;
+  padding: 1rem 1.5rem;
+  background: rgba(8, 18, 40, 0.55);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.35s ease;
 }
 
 .calendar-table tr td:first-child {
-  border-left: 1px solid var(--border-glass);
-  border-top-left-radius: 1.5rem;
-  border-bottom-left-radius: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-left-radius: 1.25rem;
+  border-bottom-left-radius: 1.25rem;
+  padding-left: 1.5rem;
 }
 
 .calendar-table tr td:last-child {
-  border-right: 1px solid var(--border-glass);
-  border-top-right-radius: 1.5rem;
-  border-bottom-right-radius: 1.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-right-radius: 1.25rem;
+  border-bottom-right-radius: 1.25rem;
 }
 
+/* TODAY — dramatic highlight */
 .calendar-table tr.is-today td {
-  background: var(--surface-glass-hover);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
   color: var(--text-main);
+  box-shadow: inset 0 1px 0 rgba(56, 189, 248, 0.12), inset 0 -1px 0 rgba(56, 189, 248, 0.08);
 }
 
 .calendar-table tr.is-today td:first-child {
-  border-left: 4px solid var(--accent-blue);
+  border-left: 3px solid rgba(56, 189, 248, 0.9);
+  box-shadow: -4px 0 20px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(56, 189, 248, 0.12);
+}
+
+.calendar-table tr.is-today td:last-child {
+  border-right: 3px solid rgba(56, 189, 248, 0.9);
 }
 
 .calendar-table tr:hover td {
-  background: var(--surface-glass-hover);
-  border-color: var(--border-glass-hover);
+  background: rgba(15, 30, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
 }
+
+.calendar-table tr.is-today:hover td {
+  background: rgba(56, 189, 248, 0.12);
+}
+
 
 .pill-badge {
   display: inline-flex;
