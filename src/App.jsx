@@ -151,6 +151,42 @@ function SeoMeta() {
   return null;
 }
 
+function DecorativeGlows({ theme }) {
+  return (
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div 
+          className="decorative-glow" 
+          style={{ 
+            top: '-10%', 
+            left: '-10%', 
+            background: theme === 'dark' ? 'rgba(56, 189, 248, 0.4)' : 'rgba(125, 211, 252, 0.4)' 
+          }} 
+        />
+        <div 
+          className="decorative-glow" 
+          style={{ 
+            bottom: '-10%', 
+            right: '-10%', 
+            background: theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(167, 139, 250, 0.3)',
+            animationDelay: '-5s'
+          }} 
+        />
+        <div 
+          className="decorative-glow" 
+          style={{ 
+            top: '40%', 
+            left: '60%', 
+            width: '30vw',
+            height: '30vw',
+            background: theme === 'dark' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(110, 231, 183, 0.2)',
+            animationDelay: '-10s'
+          }} 
+        />
+    </div>
+  );
+}
+
+
 // --- Components ---
 
 const safeClone = (element, props) => {
@@ -168,42 +204,42 @@ function ToolkitItem({ icon, label, onClick, color, progress, theme }) {
     violet: theme === 'light' ? "text-violet-600 bg-violet-50 border-violet-100 group-hover:bg-violet-50 group-hover:border-violet-200" : "text-violet-400 bg-violet-500/10 border-violet-500/20 group-hover:bg-violet-500/20 group-hover:border-violet-500/40",
   };
   const glowColors = {
-    emerald: "rgba(52,211,153,0.12)", amber: "rgba(245,158,11,0.12)",
-    indigo: "rgba(99,102,241,0.12)", rose: "rgba(244,63,94,0.12)",
-    sky: "rgba(125,211,252,0.12)", violet: "rgba(167,139,250,0.12)",
+    emerald: "rgba(16,185,129,0.15)", amber: "rgba(245,158,11,0.15)",
+    indigo: "rgba(99,102,241,0.15)", rose: "rgba(244,63,94,0.15)",
+    sky: "rgba(56,189,248,0.15)", violet: "rgba(139,92,246,0.15)",
   };
   const progressColors = {
     emerald: "bg-emerald-500", amber: "bg-amber-500", indigo: "bg-indigo-500",
-    rose: "bg-rose-500", sky: "bg-sky-500", violet: "bg-violet-500",
+    rose: "bg-rose-500", sky: "bg-sky-400", violet: "bg-violet-500",
   };
 
   return (
     <Motion.button
-      whileHover={{ scale: 1.03, y: -5, boxShadow: `0 16px 40px ${theme === 'light' ? 'rgba(0,0,0,0.04)' : glowColors[color]}` }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.05, y: -8, boxShadow: `0 20px 40px ${theme === 'light' ? 'rgba(0,0,0,0.06)' : glowColors[color]}` }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="group relative p-5 rounded-[2rem] bg-[var(--surface-glass)] border border-[var(--border-glass)] transition-all duration-300 flex flex-col items-center justify-center text-center overflow-hidden h-32"
+      className="group relative p-6 rounded-[2.5rem] bg-[var(--surface-glass)] border border-[var(--border-glass)] transition-all duration-500 flex flex-col items-center justify-center text-center overflow-hidden h-36"
     >
-      {/* subtle radial glow on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at 50% 0%, ${glowColors[color]} 0%, transparent 70%)` }} />
-      <div className={`relative p-3 rounded-2xl mb-2.5 border transition-all duration-300 ${accentColors[color]}`}>
-        {safeClone(icon, { size: 17 })}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 50% 100%, ${glowColors[color]} 0%, transparent 80%)` }} />
+      <div className={`relative p-4 rounded-2xl mb-3 border transition-all duration-500 group-hover:scale-110 ${accentColors[color]}`}>
+        {safeClone(icon, { size: 18 })}
       </div>
-      <p className="text-[8.5px] font-black uppercase tracking-[0.18em] text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors duration-300 leading-tight">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-dim)] group-hover:text-[var(--text-main)] transition-colors duration-500 leading-tight">{label}</p>
       {progress !== undefined && !isNaN(progress) && (
-        <div className="w-12 h-[3px] rounded-full bg-[var(--surface-glass)] mt-2.5 overflow-hidden">
+        <div className="w-14 h-[4px] rounded-full bg-[var(--surface-glass)] mt-3.5 overflow-hidden border border-[var(--border-glass)]">
           <Motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, progress)}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`h-full rounded-full ${progressColors[color]}`}
+            transition={{ duration: 1, ease: "circOut" }}
+            className={`h-full rounded-full ${progressColors[color]} shadow-[0_0_10px_rgba(56,189,248,0.3)]`}
           />
         </div>
       )}
     </Motion.button>
   );
 }
+
 
 function FloatingActionMenu({ onShare, shareStatus, count, setShowTasbih, setShowChecklist }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -280,16 +316,17 @@ function CountdownBlock({ value, label, highlight, theme }) {
     <div className="flex flex-col items-center shrink min-w-0">
       <div
         className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tabular-nums tracking-tighter leading-[0.9] ${highlight
-          ? theme === 'light' ? 'text-sky-500' : 'text-sky-400 drop-shadow-[0_0_24px_rgba(125,211,252,0.45)]'
+          ? theme === 'light' ? 'text-sky-500' : 'text-sky-400 drop-shadow-[0_0_30px_rgba(56,189,248,0.5)]'
           : 'text-[var(--text-main)] transition-colors'
           } transition-colors duration-500`}
       >
         {value}
       </div>
-      <span className="text-[9px] md:text-[11px] tracking-[0.25em] uppercase font-black text-[var(--text-dim)] mt-1 shrink-0">{label}</span>
+      <span className="text-[9px] md:text-[11px] tracking-[0.25em] uppercase font-black text-[var(--text-dim)] mt-3 shrink-0">{label}</span>
     </div>
   );
 }
+
 
 function RamadanProgressRing({ currentDay, hijriReadable }) {
   const dayFromText = Number.parseInt(String(hijriReadable || "").match(/\d+/)?.[0] || "", 10);
@@ -365,33 +402,33 @@ function CountdownSeparator() {
 
 function TimingTile({ icon, label, time, active, theme }) {
   return (
-    <div className={`group p-3 sm:p-5 md:p-7 rounded-[1.25rem] sm:rounded-[1.75rem] md:rounded-[2.25rem] border transition-all duration-500 relative overflow-hidden flex flex-col items-center justify-center ${active
-      ? 'bg-[var(--surface-glass-hover)] border-sky-500/30 shadow-[0_8px_32px_rgba(125,211,252,0.1)] ring-1 ring-sky-500/20'
-      : 'bg-[var(--surface-glass)] border-[var(--border-glass)] opacity-60 hover:opacity-100 hover:bg-[var(--surface-glass-hover)]'
+    <div className={`group p-4 sm:p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border transition-all duration-700 relative overflow-hidden flex flex-col items-center justify-center ${active
+      ? 'bg-[var(--surface-glass-hover)] border-sky-500/30 shadow-[0_20px_40px_rgba(56,189,248,0.15)] ring-1 ring-sky-500/20'
+      : 'bg-[var(--surface-glass)] border-[var(--border-glass)] opacity-60 hover:opacity-100 hover:bg-[var(--surface-glass-hover)] hover:scale-[1.02]'
       }`}>
       {active && (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-400/8 via-transparent to-emerald-400/5 pointer-events-none" />
-          {/* pulsing active dot */}
-          <span className="absolute top-3 right-3 flex h-2 w-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-400/10 via-transparent to-emerald-400/5 pointer-events-none" />
+          <span className="absolute top-4 right-4 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-50" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
           </span>
         </>
       )}
-      <div className={`w-7 h-7 sm:w-11 sm:h-11 md:w-13 md:h-13 flex items-center justify-center rounded-xl md:rounded-2xl mb-2 sm:mb-3 md:mb-4 transition-all duration-300 group-hover:scale-110 ${active
-        ? theme === 'light' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-[var(--text-main)] text-[var(--bg-app)] shadow-lg shadow-sky-500/10'
-        : 'bg-[var(--surface-glass)] text-[var(--text-dim)]'
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center rounded-2xl mb-3 sm:mb-4 md:mb-5 transition-all duration-500 group-hover:scale-110 ${active
+        ? theme === 'light' ? 'bg-sky-500 text-white shadow-xl shadow-sky-500/40' : 'bg-sky-400 text-slate-950 shadow-xl shadow-sky-400/20'
+        : 'bg-white/5 text-[var(--text-dim)]'
         }`}>
-        {safeClone(icon, { size: 14 })}
+        {safeClone(icon, { size: active ? 20 : 18 })}
       </div>
-      <p className={`text-[7px] sm:text-[9px] md:text-[10px] font-black tracking-[.15em] sm:tracking-[.25em] uppercase mb-1 sm:mb-1.5 ${active ? theme === 'light' ? 'text-sky-600' : 'text-sky-400' : 'text-[var(--text-dim)]'
+      <p className={`text-[8px] sm:text-[10px] md:text-[11px] font-black tracking-[.25em] uppercase mb-1.5 sm:mb-2 ${active ? theme === 'light' ? 'text-sky-600' : 'text-sky-400' : 'text-[var(--text-dim)]'
         }`}>{label}</p>
-      <p className={`text-sm sm:text-xl md:text-2xl lg:text-3xl font-black tracking-tight ${active ? 'text-[var(--text-main)]' : 'text-[var(--text-dim)]'
+      <p className={`text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter ${active ? 'text-[var(--text-main)]' : 'text-[var(--text-dim)]'
         }`}>{time}</p>
     </div>
   );
 }
+
 
 // --- Page: Home (Main Tracker) ---
 
@@ -578,48 +615,49 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
       <div className="w-full max-w-5xl px-5 pt-5 pb-4 flex flex-col justify-start items-center">
 
         {/* ── Header ── */}
-        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-3 mb-7">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
           <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2.5 mb-0.5">
-              <span className="text-2xl select-none" aria-hidden>🌙</span>
-              <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase leading-none text-[var(--text-main)]">
-                RAMADAN <span className="text-[var(--text-dim)] font-light">{data.ramadan_year}</span>
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
+              <span className="text-3xl select-none animate-float" aria-hidden>🌙</span>
+              <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none text-[var(--text-main)] italic">
+                RAMADAN <span className="text-sky-500 font-black">{data.ramadan_year.split(" /")[0]}</span>
               </h1>
             </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
-              <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] font-bold tracking-[.28em] uppercase">{todayData.hijri_readable}</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/8 px-2.5 py-0.5 text-[9px] font-bold text-sky-300/80">
-                <MapPin size={9} className="text-sky-400" /> {cityName || "Your Location"}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
+              <span className="text-[10px] md:text-[11px] text-[var(--text-muted)] font-black tracking-[.3em] uppercase">{todayData.hijri_readable}</span>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[10px] font-black text-sky-400/90 uppercase tracking-widest shadow-sm">
+                <MapPin size={10} className="text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]" /> {cityName || "Your Location"}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 rounded-2xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] text-[var(--text-main)] transition-all duration-300"
+              className="p-3.5 rounded-2xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] text-[var(--text-main)] transition-all duration-300 shadow-xl hover:-translate-y-0.5"
               aria-label="Toggle Theme"
             >
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
             {installPrompt && (
               <button
                 onClick={handleInstall}
-                className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-lg shadow-emerald-500/5"
+                className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-5 py-3.5 rounded-2xl text-[10px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
               >
-                <Download size={14} />
-                <span className="hidden xs:inline">Install</span>
+                <Download size={16} />
+                <span className="hidden sm:inline">Install</span>
               </button>
             )}
 
             <Link
               to="/ramadan"
-              className="group flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 px-5 py-2.5 rounded-2xl text-[10px] sm:text-xs font-black tracking-[.18em] uppercase text-sky-400 transition-all duration-300"
+              className="group flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 px-6 py-3.5 rounded-2xl text-[10px] sm:text-xs font-black tracking-[.18em] uppercase text-sky-400 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
             >
-              <CalendarDays size={14} className="group-hover:text-sky-300 transition-colors" /> CALENDAR
+              <CalendarDays size={16} className="group-hover:text-sky-300 transition-colors" /> CALENDAR
             </Link>
           </div>
         </div>
+
 
         {/* --- PWA Status & Install Promo --- */}
         <AnimatePresence>
@@ -1353,17 +1391,10 @@ function App() {
   return (
     <Router>
       <SeoMeta />
-      <div className="h-screen w-full relative overflow-hidden bg-[var(--bg-app)] text-[var(--text-main)] selection:bg-sky-500/30 transition-colors duration-500">
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000" style={{ backgroundImage: "url(/bg.avif)", opacity: theme === "dark" ? "0.45" : "0.08" }} />
-          <div className={`absolute inset-0 transition-colors duration-1000 ${theme === "dark" ? "bg-black/60" : "bg-white/40"}`} />
-          <div className={`absolute inset-0 bg-gradient-to-b transition-colors duration-1000 ${theme === "dark" ? "from-[#020617]/90 via-transparent to-[#020617]/90" : "from-sky-50/80 via-white/20 to-sky-50/80"}`} />
-          <div className={`absolute inset-0 transition-opacity duration-1000 pointer-events-none ${theme === "light" ? "opacity-100" : "opacity-0"}`}>
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,_#e0f2fe_0%,_transparent_50%),radial-gradient(circle_at_80%_80%,_#f5f3ff_0%,_transparent_50%)]" />
-          </div>
-        <div className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_${theme === "dark" ? "#1e293b" : "#f1f5f9"}_0%,_transparent_100%)] opacity-30`} />
-        </div>
-        <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar">
+      <div className="min-h-screen w-full relative selection:bg-sky-500/30 transition-colors duration-500">
+        <DecorativeGlows theme={theme} />
+        
+        <div className="relative z-10 w-full min-h-screen overflow-y-auto custom-scrollbar">
           <AnimatePresence>
             {showInstallModal && !locationPermissionDenied && (
               <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/40 backdrop-blur-md">
