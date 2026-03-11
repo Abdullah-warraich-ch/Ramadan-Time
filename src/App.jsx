@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Clock, Sun, ChevronLeft, RefreshCw, CalendarDays, Check, Navigation, MapPin, Share2, Plus, Download, BookOpen, RotateCcw, X, Info, Search, Heart, Sparkles, Moon } from "lucide-react";
 import { getTodayString, formatTo12Hour } from "./utils/time";
@@ -620,7 +620,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
               <span className="text-3xl select-none animate-float" aria-hidden>🌙</span>
               <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none text-[var(--text-main)] italic">
-                RAMADAN <span className="text-sky-500 font-black">{data.ramadan_year.split(" /")[0]}</span>
+                RAMADAN <span className="text-sky-500 font-black">{data.ramadan_year?.split(" /")[0] || data.ramadan_year}</span>
               </h1>
             </div>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
@@ -1122,66 +1122,114 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
 // --- Page: RamadanCalendar ---
 
-function RamadanCalendar({ data, loading, onRetry, errorMessage, theme }) {
+function RamadanCalendar({ data, loading, theme }) {
+  const navigate = useNavigate();
+
   if (loading) return null;
-  if (!data) return (
-    <div className="p-10 text-center">
-      <p className="text-[var(--text-muted)] mb-5 text-sm">{errorMessage || "Schedule unavailable"}</p>
-      <button onClick={onRetry} className="px-6 py-3 bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] rounded-2xl text-[var(--text-main)] text-[10px] font-black uppercase tracking-widest transition-colors border border-[var(--border-glass)]">Retry</button>
-    </div>
-  );
-  const today = getTodayString();
-  return (
-    <div className="px-5 pt-5 w-full max-w-4xl mx-auto pb-16">
-      <div className="flex items-center gap-3 mb-7">
-        <Link to="/" className="p-2.5 rounded-2xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] text-[var(--text-main)] transition-colors border border-[var(--border-glass)]">
-          <ChevronLeft size={18} />
-        </Link>
-        <div>
-          <h1 className="text-xl md:text-2xl font-black tracking-tight text-[var(--text-main)] uppercase">RAMADAN <span className="text-sky-400">SCHEDULE</span></h1>
-          <p className="text-[9px] font-black tracking-widest text-[var(--text-dim)] uppercase">Monthly Timings · {data.ramadan_year}</p>
+
+  if (!data) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-10">
+        <div className="glass-card rounded-[3rem] p-10 text-center max-w-sm border-white/5 shadow-2xl">
+          <p className="text-[var(--text-muted)] mb-6 text-sm font-medium tracking-wide">Calendar is unavailable right now. Please return home and try again.</p>
+          <button
+            onClick={() => navigate("/")}
+            className="w-full py-4 rounded-2xl bg-[var(--text-main)] text-[var(--bg-app)] text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
+          >
+            Go Home
+          </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {data.fasting.map((day, i) => {
-          const isToday = today === day.date;
-          return (
-            <div
-              key={i}
-              className={`p-5 rounded-[1.75rem] glass-card flex flex-col gap-3 transition-all duration-300 ${isToday
-                ? theme === 'light' ? 'border-sky-300 bg-sky-50 shadow-lg shadow-sky-500/5' : 'border-sky-500/40 shadow-[0_0_24px_rgba(125,211,252,0.1)] bg-sky-500/10'
-                : 'border-[var(--border-glass)]'
-                }`}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-sky-400">Day {day.day}</span>
-                    {isToday && (
-                      <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${theme === 'light' ? 'bg-sky-600 text-white' : 'bg-sky-500 text-black'}`}>Today</span>
-                    )}
-                  </div>
-                  <span className="text-base font-black text-[var(--text-main)]">{day.date_hijri}</span>
-                </div>
-                <span className="text-[9px] font-bold text-[var(--text-muted)] bg-[var(--surface-glass)] px-2.5 py-1 rounded-xl border border-[var(--border-glass)]">{day.date}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="p-3.5 rounded-xl bg-[var(--surface-glass)] border border-[var(--border-glass)]">
-                  <p className="text-[7px] font-black uppercase text-[var(--text-dim)] tracking-widest mb-1">SUHOOR</p>
-                  <p className="text-lg font-black text-[var(--text-main)]">{formatTo12Hour(day.time.sahur)}</p>
-                </div>
-                <div className={`p-3.5 rounded-xl border ${theme === 'light' ? 'bg-emerald-50 border-emerald-100' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                  <p className={`text-[7px] font-black uppercase tracking-widest mb-1 ${theme === 'light' ? 'text-emerald-600' : 'text-emerald-500/80'}`}>IFTAR</p>
-                  <p className={`text-lg font-black ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-500'}`}>{formatTo12Hour(day.time.iftar)}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+    );
+  }
+
+  const today = getTodayString();
+
+  return (
+    <Motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative z-10 w-full h-full max-w-5xl mx-auto px-4 md:px-8 py-10 flex flex-col items-center"
+    >
+      <div className="w-full flex justify-between items-center mb-12">
+        <Link 
+          to="/" 
+          className="p-3.5 bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] rounded-2xl transition-all shadow-xl group"
+        >
+          <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+        </Link>
+        <div className="text-center">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-gradient">Monthly <span className="text-sky-500">Schedule</span></h2>
+            <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--text-dim)] mt-2">Ramadan {data.ramadan_year?.split(" /")[0] || data.ramadan_year}</p>
+        </div>
+        <div className="w-12"></div>
       </div>
-    </div>
+
+      <div className="w-full overflow-x-auto custom-scrollbar pb-8 px-1">
+        <table className="calendar-table min-w-[750px]">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Hijri Date</th>
+              <th>Date</th>
+              <th>Sahur</th>
+              <th>Iftar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.fasting.map((day, idx) => {
+              const isToday = day.date === today;
+              return (
+                <tr key={day.date ?? idx} className={isToday ? "is-today" : ""}>
+                    <td>
+                        <div className="flex items-center gap-4">
+                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm shadow-sm transition-transform group-hover:scale-110 ${isToday ? 'bg-sky-500 text-white shadow-sky-500/20' : 'bg-white/5 text-[var(--text-muted)]'}`}>
+                                {idx + 1}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className={`text-[11px] font-black uppercase tracking-widest ${isToday ? 'text-sky-400' : 'text-[var(--text-dim)]'}`}>
+                                    {day.day.substring(0, 3)}
+                                </span>
+                                {isToday && (
+                                    <span className="text-[7px] bg-sky-500 text-white px-1.5 py-0.5 rounded-md font-black tracking-tighter uppercase mt-0.5 w-fit">Today</span>
+                                )}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span className={`text-sm font-bold tracking-tight ${isToday ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
+                            {day.hijri_readable?.split(" AH")[0] || day.date_hijri || "N/A"}
+                        </span>
+                    </td>
+                    <td>
+                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[var(--text-dim)] whitespace-nowrap">
+                            {day.date}
+                        </span>
+                    </td>
+                    <td>
+                        <div className="flex flex-col">
+                            <span className={`text-xl font-black tracking-tighter ${isToday ? 'text-sky-400' : 'text-[var(--text-main)]'}`}>
+                                {formatTo12Hour(day.time.sahur)}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div className="flex flex-col">
+                            <span className={`text-xl font-black tracking-tighter ${isToday ? 'text-emerald-400' : 'text-[var(--text-main)]'}`}>
+                                {formatTo12Hour(day.time.iftar)}
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Motion.div>
   );
 }
+
 
 // --- Main App Component ---
 
