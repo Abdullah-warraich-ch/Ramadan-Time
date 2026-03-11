@@ -636,48 +636,49 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-5xl px-5 pt-5 pb-4 flex flex-col justify-start items-center">
+      {/* ── First fold: fills exactly 100vh ── */}
+      <div className="w-full max-w-5xl px-5 flex flex-col" style={{ minHeight: '100dvh', height: '100dvh' }}>
 
         {/* ── Header ── */}
-        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-3 pt-4 pb-3 md:pt-5 md:pb-4">
           <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
-              <span className="text-3xl select-none animate-float" aria-hidden>🌙</span>
-              <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none text-[var(--text-main)] italic">
+            <div className="flex items-center justify-center md:justify-start gap-2.5 mb-0.5">
+              <span className="text-2xl select-none animate-float" aria-hidden>🌙</span>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase leading-none text-[var(--text-main)] italic">
                 RAMADAN <span className="text-sky-500 font-black">{data.ramadan_year?.split(" /")[0] || data.ramadan_year}</span>
               </h1>
             </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
-              <span className="text-[10px] md:text-[11px] text-[var(--text-muted)] font-black tracking-[.3em] uppercase">{todayData.hijri_readable}</span>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[10px] font-black text-sky-400/90 uppercase tracking-widest shadow-sm">
-                <MapPin size={10} className="text-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]" /> {cityName || "Your Location"}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1">
+              <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] font-black tracking-[.28em] uppercase">{todayData.hijri_readable}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-[9px] font-black text-sky-400/90 uppercase tracking-widest shadow-sm">
+                <MapPin size={9} className="text-sky-400" /> {cityName || "Your Location"}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-3.5 rounded-2xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] text-[var(--text-main)] transition-all duration-300 shadow-xl hover:-translate-y-0.5"
+              className="p-2.5 rounded-xl bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border-glass)] text-[var(--text-main)] transition-all duration-300 shadow-lg hover:-translate-y-0.5"
               aria-label="Toggle Theme"
             >
-              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
             {installPrompt && (
               <button
                 onClick={handleInstall}
-                className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-5 py-3.5 rounded-2xl text-[10px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
+                className="group flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 px-3.5 py-2.5 rounded-xl text-[9px] font-black tracking-[.15em] uppercase text-emerald-400 transition-all duration-300 shadow-lg hover:-translate-y-0.5"
               >
-                <Download size={16} />
+                <Download size={14} />
                 <span className="hidden sm:inline">Install</span>
               </button>
             )}
 
             <Link
               to="/ramadan"
-              className="group flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 px-6 py-3.5 rounded-2xl text-[10px] sm:text-xs font-black tracking-[.18em] uppercase text-sky-400 transition-all duration-300 shadow-xl hover:-translate-y-0.5"
+              className="group flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/40 px-4 py-2.5 rounded-xl text-[9px] sm:text-[10px] font-black tracking-[.18em] uppercase text-sky-400 transition-all duration-300 shadow-lg hover:-translate-y-0.5"
             >
-              <CalendarDays size={16} className="group-hover:text-sky-300 transition-colors" /> CALENDAR
+              <CalendarDays size={14} className="group-hover:text-sky-300 transition-colors" /> CALENDAR
             </Link>
           </div>
         </div>
@@ -700,12 +701,12 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
 
         </AnimatePresence>
 
-        <div className="w-full flex flex-col items-center gap-4">
-          {/* ── Countdown Card ── */}
+        <div className="flex-1 w-full flex flex-col items-center gap-0 min-h-0 pb-3">
+          {/* ── Countdown Card — fills remaining vh ── */}
           <Motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full glass-card-hero rounded-[2.5rem] p-6 md:p-12 flex flex-col items-center relative overflow-hidden"
+            className="w-full flex-1 glass-card-hero rounded-[2.5rem] p-5 md:p-8 flex flex-col items-center justify-between relative overflow-hidden min-h-0"
           >
             {/* Dramatic ambient glows */}
             <div className="absolute -top-32 -left-32 w-80 h-80 bg-sky-500/15 rounded-full blur-[120px] pointer-events-none" />
@@ -713,12 +714,12 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-violet-500/5 rounded-full blur-[80px] pointer-events-none" />
 
             {/* Progress bar */}
-            <div className="w-full max-w-lg mb-7">
-              <div className="flex justify-between items-center mb-2.5">
+            <div className="w-full max-w-lg mb-3 md:mb-5">
+              <div className="flex justify-between items-center mb-2">
                 <span className="text-[9px] uppercase tracking-[0.45em] font-black text-sky-400/60">Day Progress</span>
                 <span className="text-[10px] font-black tabular-nums text-sky-400/80">{Math.round(timeProgress)}%</span>
               </div>
-              <div className="h-[6px] rounded-full bg-white/5 overflow-hidden">
+              <div className="h-[5px] rounded-full bg-white/5 overflow-hidden">
                 <Motion.div
                   className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400 shadow-[0_0_16px_rgba(56,189,248,0.5)]"
                   animate={{ width: `${timeProgress}%` }}
@@ -728,7 +729,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </div>
 
             {/* Status label */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-3 md:mb-5">
               <div className="h-px w-10 bg-gradient-to-r from-transparent to-sky-400/40" />
               <span className={`text-[10px] font-black tracking-[0.55em] uppercase ${theme === 'light' ? 'text-sky-600' : 'text-sky-400/70'}`}>
                 {currentStatus === "iftar" ? "⬇ Until Iftar" : "⬆ Until Sahur"}
@@ -737,7 +738,7 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </div>
 
             {/* Digits */}
-            <div className="flex items-center justify-center gap-3 md:gap-8 mb-10">
+            <div className="flex items-center justify-center gap-3 md:gap-8 mb-4 md:mb-8">
               <CountdownBlock value={timeLeft.h} label="Hrs" theme={theme} />
               <CountdownSeparator />
               <CountdownBlock value={timeLeft.m} label="Min" theme={theme} />
@@ -752,6 +753,11 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </div>
           </Motion.div>
 
+        </div>
+      </div>
+
+      {/* ── Below the fold: scrollable content ── */}
+      <div className="w-full max-w-5xl px-5 pb-4 flex flex-col items-center gap-4">
           {/* ── Ramadan Progress Ring ── */}
           <RamadanProgressRing currentDay={todayData?.day} hijriReadable={todayData?.hijri_readable} />
 
@@ -804,7 +810,6 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </p>
           </footer>
 
-        </div>
       </div>
 
       <FloatingActionMenu onShare={handleShareTimings} shareStatus={shareStatus} count={count} setShowTasbih={setShowTasbih} setShowChecklist={setShowChecklist} />
