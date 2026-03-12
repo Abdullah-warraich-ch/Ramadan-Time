@@ -120,17 +120,17 @@ function SeoMeta() {
       return {
         title: "Ramadan 2026 Monthly Calendar | All Sehri & Iftar Timings",
         description:
-          "View the complete Ramadan 2026 fasting calendar with daily Sehri and Iftar timings for all 30 days. Accurate prayer times based on your location.",
-        keywords: "Ramadan 2026 calendar, Ramadan schedule, 30 days fasting, Sehri Iftar all days, full Ramadan timetable",
+          "View the complete Ramadan 2026 fasting calendar with daily Sehri/Suhoor and Iftar timings for all 30 days. Accurate prayer times based on your location.",
+        keywords: "Ramadan 2026 calendar, Ramadan schedule, 30 days fasting, Sehri Iftar all days, full Ramadan timetable, suhoor time, sehri time today, iftar time today",
         canonical: `${BASE_SITE_URL}/ramadan`,
       };
     }
 
     return {
-      title: "Ramadan Sehri & Iftar Timings 2026 | Live Countdown & Calendar",
+      title: "Ramadan 2026 Sehri & Iftar Timings | Sehri Countdown",
       description:
-        "Get accurate Sehri and Iftar timings for Ramadan 2026 based on your GPS location. Live countdown, Digital Tasbih, daily duas, Zakat calculator and more.",
-      keywords: "Ramadan 2026, Sehri time today, Iftar time today, Ramadan countdown, prayer times, fasting app, Tasbih, duas",
+        "Get accurate Sehri/Suhoor and Iftar timings for Ramadan 2026 by location. Live Sehri countdown and Iftar countdown to the second, plus a full calendar and spiritual tools.",
+      keywords: "Ramadan 2026, Sehri time today, Iftar time today, sehri countdown, iftar countdown, how many seconds till iftar, suhoor time, Ramadan countdown, prayer times, fasting app, Tasbih, duas",
       canonical: `${BASE_SITE_URL}/`,
     };
   }, [location.pathname]);
@@ -800,6 +800,28 @@ function Home({ data, loading, onRetry, errorMessage, cityName, mockData, setDat
             </div>
           </div>
 
+          {/* ── SEO Content ── */}
+          <section className="w-full max-w-2xl px-1 mt-6 mb-6">
+            <div className="p-6 rounded-[2rem] bg-[var(--surface-glass)] border border-[var(--border-glass)]">
+              <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-[var(--text-main)]">
+                Sehri Countdown & Iftar Countdown
+              </h2>
+              <p className="text-xs md:text-sm text-[var(--text-muted)] leading-relaxed mt-3">
+                Track the live Sehri countdown and Iftar countdown with second-by-second updates. If you search
+                "how many seconds till iftar" or want a precise Sehri/Suhoor timer, this page shows the exact time left
+                based on your current location.
+              </p>
+              <h3 className="text-[11px] md:text-xs font-black uppercase tracking-[0.35em] text-[var(--text-dim)] mt-5">
+                Suhoor Time, Sehri Time Today, Iftar Time Today
+              </h3>
+              <p className="text-xs md:text-sm text-[var(--text-muted)] leading-relaxed mt-3">
+                Use the location badge at the top to get today's Sehri (Suhoor) time and Iftar time for your city.
+                The monthly schedule page includes all 30 days of Ramadan 2026 so you can plan Sehri and Iftar timings
+                ahead for your area.
+              </p>
+            </div>
+          </section>
+
           {/* ── Footer ── */}
           <footer className="w-full max-w-2xl px-2 pt-6 pb-28 border-t border-[var(--border-glass)] text-center">
             <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-[var(--text-dim)] mb-1">
@@ -1192,7 +1214,7 @@ function RamadanCalendar({ data, loading, theme }) {
           <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
         </Link>
         <div className="text-center">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-gradient">Monthly <span className="text-sky-500">Schedule</span></h2>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-gradient">Monthly <span className="text-sky-500">Schedule</span></h1>
             <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--text-dim)] mt-2">Ramadan {data.ramadan_year?.split(" /")[0] || data.ramadan_year}</p>
         </div>
         <div className="w-12"></div>
@@ -1258,6 +1280,13 @@ function RamadanCalendar({ data, loading, theme }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="w-full max-w-3xl mt-2 px-2 text-center">
+        <p className="text-xs md:text-sm text-[var(--text-muted)] leading-relaxed">
+          This Ramadan 2026 calendar lists all 30 days with daily Sehri (Suhoor) and Iftar timings so you can plan
+          your fasting schedule in advance for your city.
+        </p>
       </div>
     </Motion.div>
   );
